@@ -61,7 +61,9 @@ private:
         external_field_potential;
 
     std::vector<Vertex> vertices;
+    std::vector<Edge> edges;
 
+    //здесь индексы в массиве ребер
     using cubic_grid =
         std::array<std::array<std::array<int, 3>, 3>, 3>;
     std::vector<cubic_grid> graph;
