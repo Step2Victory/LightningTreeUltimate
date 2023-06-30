@@ -23,26 +23,24 @@ public:
                       external_field_potential);
     void NextIter();
     void CountSigma();
-    double CountPotential_q(const std::array<double, 3>);
-    double CountPotential_Q(const std::array<double, 3>);
-    void CountElectricity(LightningTree::Edge);
-    double CountElectricity(size_t, const std::array<double, 3>);
+    void CountPotential();
+    double LightningTree::CountElectricity(Edge&);
     void CountCurrent();
 
     void Transport();
-    std::array<double, 3>& countCoords(size_t, const std::vector<int>);
+    void countCoords(std::array<double, 3>&, const size_t, const std::vector<int>);
     void Grow();
     void Delete();
 
-    bool GrowthCriterion(size_t, const std::array<double, 3>&) const;
-    bool GrowthCriterion(LightningTree::Edge) const;
+    bool GrowthCriterion(const LightningTree::Edge) const;
     bool DeletionCriterion(size_t) const;
-    cubic_grid CreateNode(size_t);
+    cubic_grid CreateNode(size_t, size_t, const std::vector<int>&);
 
 private:
     struct Vertex {
         double q;
         double Q;
+        double Phi;
         std::array<double, 3> coords;
         size_t growless_iter_number;
     };
@@ -51,7 +49,6 @@ private:
         size_t from;
         size_t to;
         double current;
-        double E;
         double sigma;
     };
 
