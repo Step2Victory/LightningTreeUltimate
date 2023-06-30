@@ -1,6 +1,14 @@
+#define epsilon_0 8.854187817619999806e-12
+#define kEps 1e-9
+#define _USE_MATH_DEFINES
+
 #include <vector>
 #include <array>
 #include <functional>
+#include <cmath>
+
+std::mt19937 gen(42);
+std::uniform_real_distribution<> dis(0, 1);
 
 class LightningTree {
 
@@ -15,22 +23,26 @@ public:
                       external_field_potential);
     void NextIter();
     void CountSigma();
-    void CountElectricity();
+    double CountPotential_q(const std::array<double, 3>);
+    double CountPotential_Q(const std::array<double, 3>);
+    void CountElectricity(LightningTree::Edge);
+    double CountElectricity(size_t, const std::array<double, 3>);
     void CountCurrent();
 
     void Transport();
+    std::array<double, 3>& countCoords(size_t, const std::vector<int>);
     void Grow();
     void Delete();
 
-    bool GrowthCriterion(size_t vertex_id,
-                         const std::array<double, 3>& coords) const;
-    bool DeletionCriterion(size_t vertex_id) const;
+    bool GrowthCriterion(size_t, const std::array<double, 3>&) const;
+    bool GrowthCriterion(LightningTree::Edge) const;
+    bool DeletionCriterion(size_t) const;
+    cubic_grid CreateNode(size_t);
 
 private:
     struct Vertex {
         double q;
         double Q;
-        double E;
         std::array<double, 3> coords;
         size_t growless_iter_number;
     };
@@ -39,6 +51,7 @@ private:
         size_t from;
         size_t to;
         double current;
+        double E;
         double sigma;
     };
 
@@ -61,10 +74,12 @@ private:
         external_field_potential;
 
     std::vector<Vertex> vertices;
+    std::vector<Edge> edges;
 
     using cubic_grid =
         std::array<std::array<std::array<int, 3>, 3>, 3>;
-    std::vector<cubic_grid> graph;
 
+    std::vector<cubic_grid> graph;
+    
     size_t iter_number;
 };
