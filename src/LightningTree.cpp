@@ -103,34 +103,57 @@ void LightningTree::CountCurrent() {
     }
 }
 
+cubic_grid LightningTree::CreateNode(size_t vertex, size_t edge, const std::vector<int>& point) {
+    /*
+    Описание метода
+    */
+   // TO DO 
+   cubic_grid node;
+   for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            for (int k = 0; k < 3; k++) {
+                node[i][j][k] = -1;
+                
+            }
+        }
+    }
+    node[1][1][1] = vertex;
+    node[2-point[0]][2-point[1]][2-point[2]] = edge;
+    return node;
+}
+
 void LightningTree::Transport() {
     /*
     Описание метода. Узнать что делает этот метод!
     */
     // TO DO
-    std::unordered_map<VertexPtr, std::pair<double, double>> delta_charges;
+    std::unordered_map<size_t, std::pair<double, double>> delta_charges;
     for (auto& elem : graph)
     {
-        VertexPtr vertex = elem.first;
-        std::vector<EdgePtr> edges = elem.second;
-        for (auto& edge : edges)
-        {
-            if (edge->from == vertex)
-            {
-                delta_charges[vertex].first -= edge.current;
-            }
-            else
-            {
-                delta_charges[vertex].first += edge.current;
+        size_t vertex_id = elem[1][1][1];
+        // std::vector<EdgePtr> edges = elem.second;
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                for (int k = 0; k < 3; k++) {
+                    if (elem[i][j][k] == -1 && (i == 1 && j == 1 && k == 1)) continue;
+                    if (edges[edelem[i][j][k]].from == vertex_id)
+                    {
+                        delta_charges[vertex_id].first -= edges[edelem[i][j][k]].current;
+                    }
+                    else
+                    {
+                        delta_charges[vertex_id].first += edges[edelem[i][j][k]].current;
+                    }
+                }
             }
         }
-        delta_charges[vertex].first -= CurrentSheath(vertex);
-        delta_charges[vertex].second += CurrentSheath(vertex);
+        delta_charges[vertex_id].first -= CurrentSheath(vertex_id);
+        delta_charges[vertex_id].second += CurrentSheath(vertex_id);
     }
     for (auto& elem : delta_charges)
     {
-        elem.first->q += delta_charges[elem.first].first * delta_t;
-        elem.first->Q += delta_charges[elem.first].second * delta_t;
+        vertices[elem.first].q += elem.second.first * delta_t;
+        vertices[elem.first].Q += elem.second.second * delta_t;
     }
     iter_number++;
 }
@@ -148,6 +171,7 @@ void LightningTree::Grow() {
     Описание метода
     */
     // TO DO
+    std::vector<cubic_grid> temp_graph;
     for (unsigned v = graph.size(); v-- > 0; ) {
         size_t vertex_id = graph[v][1][1][1];
         for (int i = 0; i < 3; i++) {
@@ -162,7 +186,7 @@ void LightningTree::Grow() {
                     if (GrowthCriterion(new_edge)) {
                         edges.push_back(new_edge);
                         graph[v][i][j][k] = edges.size() - 1;
-                        graph.push_back(CreateNode(vertices.size() - 1), edges.size() - 1, std::vector{i, j, k});
+                        temp_graph.push_back(CreateNode(vertices.size() - 1), edges.size() - 1, std::vector{i, j, k});
                     }
                     else {
                         vertices.pop_back();
@@ -171,6 +195,7 @@ void LightningTree::Grow() {
             }
         }
     }
+    graph.push_back(temp_graph);
 }
 
 void LightningTree::Delete() {
@@ -178,6 +203,7 @@ void LightningTree::Delete() {
     Описание метода
     */
     // TO DO
+
 }
 
 bool LightningTree::GrowthCriterion(Edge edge) const {
@@ -185,11 +211,11 @@ bool LightningTree::GrowthCriterion(Edge edge) const {
     double E = CountElectricity(edge);
     if (E > E_plus)
     {
-        return (1 - std::exp(-std::pow(((E - E_plus) / E_plus), 1))) > probability;
+        return (1 - std::exp(-std::pow(((E - E_plus) / E_plus), 2.5))) > probability;
     }
     else if (-E > E_minus)
     {
-        return (1 - std::exp(-std::pow(((-E - E_minus) / E_minus), 1))) > probability;
+        return (1 - std::exp(-std::pow(((-E - E_minus) / E_minus), 2.5))) > probability;
     }
     return false;
 }
@@ -198,23 +224,4 @@ bool LightningTree::DeletionCriterion(size_t vertex_id) const {
     Описание метода
     */
     // TO DO
-}
-
-LightningTree::cubic_grid LightningTree::CreateNode(size_t vertex, size_t edge, const std::vector<int>& point) {
-    /*
-    Описание метода
-    */
-   // TO DO 
-   cubic_grid node;
-   for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            for (int k = 0; k < 3; k++) {
-                node[i][j][k] = -1;
-                
-            }
-        }
-    }
-    node[1][1][1] = vertex;
-    node[2-point[0]][2-point[1]][2-point[2]] = edge;
-    return node;
 }
