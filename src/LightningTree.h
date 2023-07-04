@@ -1,14 +1,15 @@
-#define epsilon_0 8.854187817619999806e-12
-#define kEps 1e-9
-#define _USE_MATH_DEFINES
-
 #include <vector>
 #include <array>
 #include <functional>
 #include <cmath>
 
+// ???
 std::mt19937 gen(42);
 std::uniform_real_distribution<> dis(0, 1);
+
+constexpr double epsilon_0 = 8.854187817619999806e-12;
+constexpr double kEps = 1e-9;
+constexpr double PI = 3.14159265358979323846;
 
 class LightningTree {
 
@@ -24,17 +25,17 @@ public:
     void NextIter();
     void CountSigma();
     void CountPotential();
-    double LightningTree::CountElectricity(Edge&);
+    double CountElectricity(const size_t, const size_t) const;
     void CountCurrent();
+    void countCoords(std::array<double, 3>&, const size_t, const std::vector<int>);
+    cubic_grid CreateNode(size_t, size_t, const std::vector<int>&); // ???
 
     void Transport();
-    void countCoords(std::array<double, 3>&, const size_t, const std::vector<int>);
     void Grow();
     void Delete();
 
-    bool GrowthCriterion(const LightningTree::Edge) const;
+    bool GrowthCriterion(const size_t, const size_t) const;
     bool DeletionCriterion(size_t) const;
-    cubic_grid CreateNode(size_t, size_t, const std::vector<int>&);
 
 private:
     struct Vertex {
@@ -42,7 +43,7 @@ private:
         double Q;
         double Phi;
         std::array<double, 3> coords;
-        size_t growless_iter_number;
+        size_t growless_iter_number; // ???
     };
 
     struct Edge {
@@ -60,15 +61,15 @@ private:
     double q_minus_max;
     double Q_plus_s;
     double Q_minus_s;
-    double resistance;
+    double resistance; // ???
     double E_plus;
     double E_minus;
     double alpha;
     double beta;
     double sigma;
-    size_t periphery_size;
+    size_t periphery_size; // ???
     std::function<double(double, double, double)>
-        external_field_potential;
+        external_field_potential; // ???
 
     std::vector<Vertex> vertices;
     std::vector<Edge> edges;
