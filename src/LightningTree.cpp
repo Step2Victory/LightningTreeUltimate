@@ -1,6 +1,8 @@
 #include "LightningTree.h"
 
-LightningTree::LightningTree(
+namespace LightningTree;
+
+LightningTree(
     double h, double delta_t, double r, double R,
     size_t periphery_size, double q_plus_max, double q_minus_max,
     double Q_plus_s, double Q_minus_s, double resistance,
@@ -27,7 +29,7 @@ LightningTree::LightningTree(
     // TO DO
 }
 
-void LightningTree::NextIter() {
+void NextIter() {
     /*
     Описание метода
     */
@@ -42,7 +44,7 @@ void LightningTree::NextIter() {
     }
 }
 
-void LightningTree::CountPotential() {
+void CountPotential() {
     /*
     * Описание метода
     */
@@ -54,18 +56,18 @@ void LightningTree::CountPotential() {
             double mirror_l = abs(sqrt(pow((vertex.coords[0] - point.coords[0]), 2) + pow((vertex.coords[1] - point.coords[1]), 2) + pow((vertex.coords[2] + point.coords[2]), 2)));
             if (l < kEps)
             {
-                Phi += vertex.q / (4 * PI * epsilon_0) * (1 / (h + r) + 1 / (mirror_l + r)) + 
-                            vertex.Q / (4 * PI * epsilon_0) * (1 / (h + R) + 1 / (mirror_l + R));
+                Phi += vertex.q / (4 * numbers::pi * epsilon_0) * (1 / (h + r) + 1 / (mirror_l + r)) + 
+                            vertex.Q / (4 * numbers::pi * epsilon_0) * (1 / (h + R) + 1 / (mirror_l + R));
             }
             Phi += vertex.q / (4 * PI * epsilon_0) * (1 / (l + r) + 1 / (mirror_l + r)) +
-                        vertex.Q / (4 * PI * epsilon_0) * (1 / (l + R) + 1 / (mirror_l + R));
+                        vertex.Q / (4 * numbers::pi * epsilon_0) * (1 / (l + R) + 1 / (mirror_l + R));
         }
         // ???
         point.Phi = Phi + phi_a->getValue(point.coords); 
     }
 }
 
-double LightningTree::CountElectricity(const size_t v_from_id, const size_t v_to_id) const {
+double CountElectricity(const size_t v_from_id, const size_t v_to_id) const {
     /*
     Описание метода
     */
@@ -82,7 +84,7 @@ double LightningTree::CountElectricity(const size_t v_from_id, const size_t v_to
     return (phi_from - phi_to) / l;
 }
 
-void LightningTree::CountSigma() {
+void CountSigma() {
     /*
     Описание метода
     */
@@ -97,7 +99,7 @@ void LightningTree::CountSigma() {
     }
 }
 
-void LightningTree::CountCurrent() {
+void CountCurrent() {
     /*
     Описание метода
     */
@@ -106,7 +108,7 @@ void LightningTree::CountCurrent() {
     }
 }
 
-void LightningTree::countCoords(std::array<double, 3>& result, const size_t vertex_id, const std::vector<int> point) {
+void countCoords(std::array<double, 3>& result, const size_t vertex_id, const std::vector<int> point) {
     result = {
         vertices[vertex_id].coords[0] + (1 - point[0]) * h,
         vertices[vertex_id].coords[1] + (1 - point[1]) * h,
@@ -115,7 +117,7 @@ void LightningTree::countCoords(std::array<double, 3>& result, const size_t vert
 }
 
 // ???
-cubic_grid LightningTree::CreateNode(size_t vertex, size_t edge, const std::vector<int>& point) {
+cubic_grid CreateNode(size_t vertex_id, size_t edge_id, const std::vector<int>& point) {
     /*
     Описание метода
     */
@@ -129,12 +131,14 @@ cubic_grid LightningTree::CreateNode(size_t vertex, size_t edge, const std::vect
             }
         }
     }
-    node[1][1][1] = vertex;
-    node[2-point[0]][2-point[1]][2-point[2]] = edge;
+    node[1][1][1] = vertex_id;
+    vertices_peripherality.push_back(true);
+    vertices_activity.push_back(true);
+    node[2-point[0]][2-point[1]][2-point[2]] = edge_id;
     return node;
 }
 
-void LightningTree::Transport() {
+void Transport() {
     /*
     Описание метода. Узнать что делает этот метод!
     */
@@ -170,7 +174,7 @@ void LightningTree::Transport() {
     iter_number++;
 }
 
-void LightningTree::Grow() {
+void Grow() {
     /*
     Описание метода
     */
@@ -190,13 +194,20 @@ void LightningTree::Grow() {
                     vertices.push_back(new_vertex);
 
                     if (GrowthCriterion(vertex_id, vertices.size() - 1)) {
+                        vertices_peripherality[verex_id] = false;
+                        vetrices.growless_iter_number = 0;
                         LightningTree::Edge new_edge = { vertex_id, vertices.size() - 1, 0, 0};
                         edges.push_back(new_edge);
+                        edges_activity.push_back(true);
                         graph[v][i][j][k] = edges.size() - 1;
                         temp_graph.push_back(CreateNode(vertices.size() - 1, edges.size() - 1, std::vector{i, j, k}));
                     }
                     else {
                         vertices.pop_back();
+                        if(vertices_peripherality[verex_id])
+                        {
+                            vetrices.growless_iter_number++;
+                        }
                     }
                 }
             }
@@ -205,15 +216,37 @@ void LightningTree::Grow() {
     graph.insert(graph.end(), temp_graph.begin(), temp_graph.end());
 }
 
-void LightningTree::Delete() {
+void Delete() {
     /*
     Описание метода
     */
-    // TO DO
+    for (unsigned v_id = 0; v < vertices.size(); v++)
+    {
+        if(DeletionCriterion(v_id))
+        {
+            vertices_activity[v_id] = false;
+            size_t graph_id = finde_index(v_id);
+            for (int i = 0; i < 3; i++) 
+            {
+                for (int j = 0; j < 3; j++) 
+                {
+                    for (int k = 0; k < 3; k++) 
+                    {
+                        if (graph[graph_id][i][j][k] == -1 && (i == 1 && j == 1 && k == 1)) continue;
+                        edges_activity[graph[v][i][j][k]] = false;
+                        if(vertices[edges[graph[v][i][j][k]].from].growless_iter_number /*Проверка на количество исходящих ребер*/)
+                        {
+                            vertices_peripherality[edges[graph[v][i][j][k]].from] = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 }
 
-bool LightningTree::GrowthCriterion(const size_t v_from_id, const size_t v_to_id) const {
+bool GrowthCriterion(const size_t v_from_id, const size_t v_to_id) const {
     // ???
     double probability = dis(gen);
     double E = CountElectricity(v_from_id, v_to_id);
@@ -227,9 +260,9 @@ bool LightningTree::GrowthCriterion(const size_t v_from_id, const size_t v_to_id
     }
     return false;
 }
-bool LightningTree::DeletionCriterion(size_t vertex_id) const {
+bool DeletionCriterion(size_t vertex_id) const {
     /*
     Описание метода
     */
-    // TO DO
+    return (vertices_peripherality[vertex_id] && vertices[vertex_id].growless_iter_number > periphery_size)
 }
