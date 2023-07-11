@@ -3,9 +3,11 @@
 #include <functional>
 #include <cmath>
 #include <numbers>
+#include <random>
 
 std::mt19937 gen(42);
 std::uniform_real_distribution<> dis(0, 1);
+using cubic_grid = std::array<std::array<std::array<int, 3>, 3>, 3>;
 
 constexpr double epsilon_0 = 8.854187817619999806e-12;
 constexpr double kEps = 1e-9;
@@ -19,21 +21,21 @@ public:
                   double Q_minus_s, double resistance, double E_plus,
                   double E_minus, double alpha, double beta,
                   double sigma,
-                  std::function<double(double, double, double)>
+                  std::function<double(const std::array<double, 3>&)>
                       external_field_potential);
     void NextIter();
     void CountSigma();
     void CountPotential();
-    double LightningTree::CountElectricity(Edge&);
+    double CountElectricity(size_t, size_t) const;
     void CountCurrent();
+    void countCoords(std::array<double, 3>&, size_t, const std::vector<int>);
     cubic_grid CreateNode(size_t, size_t, const std::vector<int>&);
 
     void Transport();
-    void countCoords(std::array<double, 3>&, const size_t, const std::vector<int>);
     void Grow();
     void Delete();
 
-    bool GrowthCriterion(const LightningTree::Edge) const;
+    bool GrowthCriterion(size_t, size_t) const;
     bool DeletionCriterion(size_t) const;
     
 
@@ -68,7 +70,7 @@ private:
     double beta;
     double sigma;
     size_t periphery_size;
-    std::function<double(double, double, double)>
+    std::function<double(const std::array<double, 3>&)>
         external_field_potential;
 
     std::vector<Vertex> vertices;
@@ -76,10 +78,6 @@ private:
     std::vector<bool> vertices_activity;
     std::vector<Edge> edges;
     std::vector<bool> edges_activity;
-
-    using cubic_grid =
-        std::array<std::array<std::array<int, 3>, 3>, 3>;
-
     std::vector<cubic_grid> graph;
     
     size_t iter_number;
