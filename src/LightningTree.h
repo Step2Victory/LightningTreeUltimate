@@ -30,6 +30,7 @@ public:
     void CountCurrent();
     void countCoords(std::array<double, 3>&, size_t, const std::vector<int>);
     cubic_grid CreateNode(size_t, size_t, const std::vector<int>&);
+    size_t find_index_node(size_t);
 
     void Transport();
     void Grow();
@@ -52,7 +53,7 @@ private:
         size_t from;
         size_t to;
         double current;
-        double sigma;
+        double current;
     };
 
     double h;
