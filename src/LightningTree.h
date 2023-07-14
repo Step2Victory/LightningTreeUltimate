@@ -1,8 +1,6 @@
 #include <vector>
 #include <array>
 #include <functional>
-#include <cmath>
-#include <random>
 
 class LightningTree {
 private:
@@ -25,8 +23,8 @@ public:
     void CountCurrent();
     void countCoords(std::array<double, 3>&, size_t,
                      const std::vector<int>&);
-    cubic_grid CreateNode(size_t, size_t, const std::vector<int>&);
-    size_t find_index_node(size_t);
+    double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
+    cubic_grid CreateNode(size_t, const std::vector<int>&);
 
     void Transport();
     void Grow();
@@ -41,6 +39,7 @@ private:
         double Q;
         double Phi;
         std::array<double, 3> coords;
+        size_t number_edges;
         size_t growless_iter_number;
     };
 
