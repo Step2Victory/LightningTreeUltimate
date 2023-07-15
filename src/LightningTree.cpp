@@ -1,12 +1,44 @@
 #include "LightningTree.h"
+
+#include "yaml-cpp/yaml.h"
+#include <glog/logging.h>
+
 #include <numbers>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
+#include <string>
 
-std::mt19937 gen(42);
-std::uniform_real_distribution<> dis(0, 1);
 
 constexpr double epsilon_0 = 8.854187817619999806e-12;
 constexpr double kEps = 1e-9;
+
+LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
+    YAML::Node config = YAML::LoadFile(path_to_config_file);
+    h = config["h"].as<double>();
+    delta_t = config["delta_t"].as<double>();
+    r = config["r"].as<double>();
+    R = config["R"].as<double>();
+    periphery_size = config["periphery_size"].as<double>();
+    q_plus_max = config["q_plus_max"].as<double>();
+    q_minus_max = config["q_minus_max"].as<double>();
+    Q_plus_s = config["Q_plus_s"].as<double>();
+    Q_minus_s = config["Q_minus_s"].as<double>();
+    resistance = config["resistance"].as<double>();
+    E_plus = config["E_plus"].as<double>();
+    E_minus = config["E_minus"].as<double>();
+    alpha = config["alpha"].as<double>();
+    beta = config["beta"].as<double>();
+    sigma = config["sigma"].as<double>();
+
+    // TO DO (external_field_potential)
+
+    seed = config["seed"].as<int>();
+    gen = std::mt19937(seed);
+    dis = std::uniform_real_distribution<>(0, 1);
+
+    iter_number = 0;
+}
 
 LightningTree::LightningTree(
     double h, double delta_t, double r, double R,
@@ -15,7 +47,7 @@ LightningTree::LightningTree(
     double E_plus, double E_minus, double alpha, double beta,
     double sigma,
     std::function<double(const std::array<double, 3>&)>
-        external_field_potential)
+        external_field_potential, int seed)
     : h(h),
       delta_t(delta_t),
       r(r),
@@ -31,7 +63,10 @@ LightningTree::LightningTree(
       alpha(alpha),
       beta(beta),
       sigma(sigma),
-      external_field_potential(external_field_potential) {
+      external_field_potential(external_field_potential),
+      seed(42) {
+    gen = std::mt19937(seed);
+    dis = std::uniform_real_distribution<>(0, 1);
     // TO DO
 }
 
@@ -321,6 +356,7 @@ bool LightningTree::GrowthCriterion(const size_t v_from_id,
     }
     return false;
 }
+
 bool LightningTree::DeletionCriterion(size_t vertex_id) const {
     /*
     Описание метода
@@ -328,4 +364,28 @@ bool LightningTree::DeletionCriterion(size_t vertex_id) const {
     return (vertices_peripherality[vertex_id] &&
             vertices[vertex_id].growless_iter_number <
                 -periphery_size);
+}
+
+void LightningTree::AllParams() {
+    LOG(INFO) << "h: " << h << '\n'
+        << "delta_t: " << delta_t << '\n'
+        << "r: " << r << '\n'
+        << "R: " << R << '\n'
+        << "periphery_size: " << periphery_size << '\n'
+        << "q_plus_max: " << q_plus_max << '\n'
+        << "q_minus_max: " << q_minus_max << '\n'
+        << "Q_plus_s: " << Q_plus_s << '\n'
+        << "Q_minus_s: " << Q_minus_s << '\n'
+        << "resistance: " << resistance << '\n'
+        << "E_plus: " << E_plus << '\n'
+        << "E_minus: " << E_minus << '\n'
+        << "alpha: " << alpha << '\n'
+        << "beta: " << beta << '\n'
+        << "sigma: " << sigma << '\n'
+        << "seed: " << seed;
+}
+
+void LightningTree::Info() {
+    LOG(INFO) << "iter_number: " << iter_number << '\n' 
+        << "number_of_vertices: " << vertices.size();
 }
