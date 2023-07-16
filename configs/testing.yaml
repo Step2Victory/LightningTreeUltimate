@@ -1,0 +1,16 @@
+h: 100
+delta_t: 10e-6
+r: 0.01
+R: 50
+periphery_size: 1
+q_plus_max: 15e-10
+q_minus_max: 3e-9
+Q_plus_s: 4e-4
+Q_minus_s: 8e-4
+resistance: 1
+E_plus: 150000
+E_minus: 300000
+alpha: 5e-8
+beta: 10
+sigma: 1e-5
+seed: 42
