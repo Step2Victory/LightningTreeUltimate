@@ -1,6 +1,8 @@
 #include <vector>
 #include <array>
 #include <functional>
+#include <filesystem>
+#include <random>
 
 class LightningTree {
 private:
@@ -36,6 +38,8 @@ public:
 
     void AllParams();
     void Info();
+    void ReturnFiles(const std::filesystem::path&);
+    void ReturnPhi(double, double);
 private:
     struct Vertex {
         double q;
