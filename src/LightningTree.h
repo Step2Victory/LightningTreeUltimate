@@ -24,10 +24,9 @@ public:
     void CountPotential();
     double CountElectricity(size_t, size_t) const;
     void CountCurrent();
-    void countCoords(std::array<double, 3>&, size_t,
-                     const std::vector<int>&);
+    std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
     double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
-    cubic_grid CreateNode(size_t, const std::vector<int>&);
+    cubic_grid CreateNode(size_t, const std::array<int, 3>&);
 
     void Transport();
     void Grow();
@@ -71,6 +70,7 @@ private:
     double alpha;
     double beta;
     double sigma;
+    double degree_probability_growth;
     size_t periphery_size;
     std::function<double(const std::array<double, 3>&)>
         external_field_potential;

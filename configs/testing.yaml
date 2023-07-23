@@ -14,3 +14,13 @@ alpha: 5e-8
 beta: 10
 sigma: 1e-5
 seed: 42
+p_0: 0.0000007
+L: 200
+start_x: 0
+start_y: 0
+start_z: 8000
+end_x: 0
+end_y: 0
+end_z: 10000
+a: 1
+probability_growth_degree: 2.5

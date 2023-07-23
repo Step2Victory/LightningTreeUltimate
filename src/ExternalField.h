@@ -41,10 +41,10 @@ double Potential(
 
                 if (l < kEps) {
                     result += q_values[i][j][k] / (4 * std::numbers::pi * epsilon_0) *
-                            (1 / (h) + 1 / (mirror_l));
+                            (1 / (h) - 1 / (mirror_l));
                 }
                 result += q_values[i][j][k] / (4 * std::numbers::pi * epsilon_0) *
-                        (1 / (l) + 1 / (mirror_l));
+                        (1 / (l) - 1 / (mirror_l));
             }
         }
     }
@@ -98,6 +98,7 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
     std::function<double(const std::array<double, 3>&)> result = [potential_values = std::move(potential_values), r = std::move(start), h = std::move(h)](const std::array<double, 3>& coords)
     {
         std::array<int, 3> shift = {(coords[0] - r[0])/h, (coords[1] - r[1])/h, (coords[2] - r[2])/h};
+        // std::array<int, 3> shift = {static_cast((coords[0] - r[0])/h), static_cast((coords[1] - r[1])/h), static_cast((coords[2] - r[2])/h)};
         if(shift[0] < 0 || shift[1] < 0 || shift[1] < 0 || shift[0] >= potential_values.size() || shift[1] >= potential_values[0].size() || shift[1] >= potential_values[0][0].size())
         {
             std::cout<<"Выход за границу расчетной области!\n";
