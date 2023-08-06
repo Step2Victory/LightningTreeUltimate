@@ -21,6 +21,7 @@ public:
                       external_field_potential, int seed);
     void NextIter();
     void CountSigma();
+    double potencial(const std::array<double, 3>&);
     void CountPotential();
     double CountElectricity(size_t, size_t) const;
     void CountCurrent();
@@ -38,7 +39,7 @@ public:
     void AllParams();
     void Info();
     void ReturnFiles(const std::filesystem::path&);
-    void ReturnPhi(double, double);
+    void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&, const std::array<double, 3>&);
 private:
     struct Vertex {
         double q;
@@ -71,6 +72,8 @@ private:
     double beta;
     double sigma;
     double degree_probability_growth;
+    std::array<double, 3> start_r;
+    std::array<double, 3> end_r;
     size_t periphery_size;
     std::function<double(const std::array<double, 3>&)>
         external_field_potential;

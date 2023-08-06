@@ -32,18 +32,22 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file)
     sigma = config["sigma"].as<double>();
     double p_0 = config["p_0"].as<double>();
     double L = config["L"].as<double>();
-    double start_x = config["start_x"].as<double>();
-    double start_y = config["start_y"].as<double>();
-    double start_z = config["start_z"].as<double>();
-    double end_x = config["end_x"].as<double>();
-    double end_y = config["end_y"].as<double>();
-    double end_z = config["end_z"].as<double>();
+    start_r = {
+        config["start_x"].as<double>(),
+        config["start_y"].as<double>(),
+        config["start_z"].as<double>()
+    };
+    end_r = {
+        config["end_x"].as<double>(),
+        config["end_y"].as<double>(),
+        config["end_z"].as<double>(),
+    };
     double a = config["a"].as<double>();
 
     external_field_potential = countExternalField(
         std::vector({
-            ChargeLayer{.p_0 = -p_0, .h = h, .L = L, .r=std::array<double, 3>{start_x, start_y, start_z}, .a=a},
-            ChargeLayer{.p_0 = p_0, .h = h, .L = L, .r=std::array<double, 3>{end_x, end_y, end_z}, .a=a}}),
+            ChargeLayer{.p_0 = -p_0, .h = h, .L = L, .r=start_r, .a=a},
+            ChargeLayer{.p_0 = p_0, .h = h, .L = L, .r=end_r, .a=a}}),
         std::array<double, 3>{-5*h, -5*h, 9000 - 20 * h},
         std::array<double, 3>{5 * h, 5 * h, 9000 + 20 * h},
         h);
@@ -112,6 +116,31 @@ void LightningTree::NextIter()
     }
 }
 
+double LightningTree::potencial(const std::array<double, 3>& coords)
+{
+    double Phi = 0;
+    for (auto& vertex : vertices) 
+    {
+        double l = countDistance(vertex.coords, coords);
+        double mirror_l = std::abs(std::sqrt(
+                    std::pow((vertex.coords[0] - coords[0]), 2) +
+                    std::pow((vertex.coords[1] - coords[1]), 2) +
+                    std::pow((vertex.coords[2] + coords[2]), 2)));
+        if (l < kEps) 
+        {
+            Phi += vertex.q / (4 * std::numbers::pi * epsilon_0) *
+                        (1 / (h + r) - 1 / (mirror_l + r)) +
+                    vertex.Q / (4 * std::numbers::pi * epsilon_0) *
+                        (1 / (h + R) - 1 / (mirror_l + R));
+        }
+        Phi += vertex.q / (4 * std::numbers::pi * epsilon_0) *
+                    (1 / (l + r) - 1 / (mirror_l + r)) +
+                vertex.Q / (4 * std::numbers::pi * epsilon_0) *
+                    (1 / (l + R) - 1 / (mirror_l + R));
+    }
+    return Phi;
+}
+
 void LightningTree::CountPotential() 
 {
     /*
@@ -119,27 +148,7 @@ void LightningTree::CountPotential()
      */
     for (auto& point : vertices) 
     {
-        double Phi = 0;
-        for (auto& vertex : vertices) 
-        {
-            double l = countDistance(vertex.coords, point.coords);
-            double mirror_l = std::abs(std::sqrt(
-                     std::pow((vertex.coords[0] - point.coords[0]), 2) +
-                     std::pow((vertex.coords[1] - point.coords[1]), 2) +
-                     std::pow((vertex.coords[2] + point.coords[2]), 2)));
-            if (l < kEps) 
-            {
-                Phi += vertex.q / (4 * std::numbers::pi * epsilon_0) *
-                           (1 / (h + r) - 1 / (mirror_l + r)) +
-                       vertex.Q / (4 * std::numbers::pi * epsilon_0) *
-                           (1 / (h + R) - 1 / (mirror_l + R));
-            }
-            Phi += vertex.q / (4 * std::numbers::pi * epsilon_0) *
-                       (1 / (l + r) - 1 / (mirror_l + r)) +
-                   vertex.Q / (4 * std::numbers::pi * epsilon_0) *
-                       (1 / (l + R) - 1 / (mirror_l + R));
-        }
-        point.Phi = Phi + external_field_potential(point.coords);
+        point.Phi = potencial(point.coords) + external_field_potential(point.coords);
     }
 }
 
@@ -275,8 +284,9 @@ void LightningTree::Grow()
     */
     // TO DO
     std::vector<cubic_grid> temp_graph;
-    for (size_t v_id = graph.size(); v_id-- >= 0;) 
+    for (size_t v_from_id = graph.size(); v_from_id-- >= 0;) 
     {
+        if(!vertices_activity[v_from_id]) continue;
         bool notGrow = true;
         auto directions = randomDirections();
         for (auto dir : directions)
@@ -287,58 +297,88 @@ void LightningTree::Grow()
         // for (int i = 0; i < 3; i++) {
         //     for (int j = 0; j < 3; j++) {
         //         for (int k = 0; k < 3; k++) {
-                    size_t e_id = graph[v_id][i][j][k];
+                    size_t e_id = graph[v_from_id][i][j][k];
 
-                    /// Использовать проверку на активность ребра отдельно, что бы исключить лишний поиск неактивной вершину графа
-                    /// (искать вершину по координатам, только если рост происходит из другой вершины)
+                    if ((i == 1 && j == 1 && k == 1)) continue;
 
-                    if ((e_id != -1 || edges_activity[e_id]) && 
-                        (i == 1 && j == 1 && k == 1))
-                        continue;
-
-                    std::array<double, 3> coords = countCoords(v_id, std::array{i, j, k});
-
-                    // Проверка на наличие вершины в векторе вершин по
-                    // координатам.
-
-                    Vertex new_vertex = {.q = 0,
-                                         .Q = 0,
-                                         .Phi = 0,
-                                         .coords = coords,
-                                         .number_edges = 0,
-                                         .growless_iter_number = 0};
-                    vertices.push_back(new_vertex);
-
-                    if (GrowthCriterion(v_id, vertices.size() - 1)) 
+                    if (e_id == -1)
                     {
-                        notGrow = false;
-                        vertices_peripherality[v_id] = false;
-                        vertices[v_id].number_edges++;
+                        int v_to_id = -1;
+                        bool new_vertex = true;
+                        std::array<double, 3> coords = countCoords(v_from_id, std::array{i, j, k});
 
-                        // Проверка на наличие ребра в векторе рёбер
-                        // по from и to вершинам. Занулять остальные
-                        // переменные ребра???
+                        // Проверка на наличие вершины в векторе вершин по координатам.
+                        
+                        for(size_t id = vertices.size(); id-- >= 0;)
+                        {
+                            if(vertices_activity[id]) continue;
+                            // if(vertices[id].coords == coords) 
+                            if(vertices[id].coords[0] == coords[0] && 
+                                vertices[id].coords[1] == coords[1] && 
+                                vertices[id].coords[2] == coords[2]) 
+                            {
+                                v_to_id = id;
+                                new_vertex = false;
+                                break;
+                            }
+                        }
+                        if(v_to_id == -1)
+                        {
+                            Vertex new_vertex = {.q = 0, 
+                                            .Q = 0,
+                                            .Phi = 0,
+                                            .coords = coords,
+                                            .number_edges = 0,
+                                            .growless_iter_number = 0};
+                            vertices.push_back(new_vertex);
+                            v_to_id = vertices.size() - 1;
+                        }
 
-                        Edge new_edge = {.from = v_id,
-                                         .to = vertices.size() - 1,
-                                         .current = 0,
-                                         .sigma = sigma};
-                        edges.push_back(new_edge);
-                        edges_activity.push_back(true);
-                        graph[v_id][i][j][k] = edges.size() - 1;
-                        temp_graph.push_back(CreateNode(
-                            edges.size() - 1, std::array{i, j, k}));
-                    } else 
-                    {
-                        vertices.pop_back();
-                    }
+                        if (GrowthCriterion(v_from_id, v_to_id)) 
+                        {
+                            notGrow = false;
+                            vertices_peripherality[v_from_id] = false;
+                            vertices[v_from_id].number_edges++;
+
+                            Edge new_edge = {.from = v_from_id,
+                                            .to = v_to_id,
+                                            .current = 0,
+                                            .sigma = sigma};
+                            edges.push_back(new_edge);
+                            edges_activity.push_back(true);
+                            graph[v_from_id][i][j][k] = edges.size() - 1;
+                            if(new_vertex) temp_graph.push_back(CreateNode(edges.size() - 1, std::array{i, j, k}));
+                            else 
+                            {
+                                vertices_activity[v_to_id] = true;
+                                graph[v_to_id][2-i][2-j][2-k] = edges.size() - 1;
+                            }
+                        } else if(new_vertex)
+                        {
+                            vertices.pop_back();
+                        }
+
+                    } else if (!edges_activity[e_id]) 
+                    {        
+                        // проверка неактивного ребра                
+                        if (GrowthCriterion(v_from_id, edges[e_id].to)) 
+                        {
+                            notGrow = false;
+                            vertices_peripherality[v_from_id] = false;
+                            vertices[v_from_id].number_edges++;
+
+                            vertices_activity[edges[e_id].to] = true;
+                            edges_activity[e_id] = true;
+                        }
+
+                    } else continue;
         //         }
         //     }
         // }
         }
         if (notGrow) 
         {
-            vertices[v_id].growless_iter_number++;
+            vertices[v_from_id].growless_iter_number++;
         }
     }
     graph.insert(graph.end(), temp_graph.begin(), temp_graph.end());
@@ -363,7 +403,7 @@ void LightningTree::Delete()
                     for (int k = 0; k < 3; k++) 
                     {
                         size_t e_id = graph[v_id][i][j][k];
-                        if ((e_id == -1 || !edges_activity[e_id]) &&
+                        if ((e_id == -1 || !edges_activity[e_id]) ||
                             (i == 1 && j == 1 && k == 1))
                             continue;
                         edges_activity[e_id] = false;
@@ -458,7 +498,23 @@ void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data)
     fout.close();
 }
 
-void LightningTree::ReturnPhi(double start_z, double end_z)
+void LightningTree::ReturnPhi(const std::filesystem::path& path_to_data, const std::array<double, 3>& start_r, const std::array<double, 3>& end_r)
 {
-    // TO DO
+    std::ofstream fout(path_to_data / "phi_info.txt");
+    fout << 'z' << ' ' <<"full_phi" << ' ' << "ext_phi" << '\n';
+    for (double z = start_r[2]; z < end_r[2]; z += h)
+    {
+        double full_sum = 0;
+        double ext_sum = 0;
+        for (double x = start_r[0]; x < end_r[0]; x += h)
+        {
+            for (double y = start_r[1]; y < end_r[1]; y += h)
+            {
+                full_sum += potencial({x, y, z}) + external_field_potential({x, y, z}); // Стоит ли считать потенциал в каждой точке плоскости относительно всех зарядов???
+                ext_sum += external_field_potential({x, y, z});
+            }
+        }
+        fout << z << ' ' << full_sum * (h * h) / ((end_r[0] - start_r[0]) * (end_r[1] - start_r[1])) << ' ' << ext_sum * (h * h) / ((end_r[0] - start_r[0]) * (end_r[1] - start_r[1])) << '\n';
+    }
+fout.close();
 }
