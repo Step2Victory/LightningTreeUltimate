@@ -27,12 +27,12 @@ int main(int argc, char* argv[]) {
     //auto lt = LightningTree(project_path / "configs" / "testing.yaml");
     auto lt = LightningTree(
             /*.h = */ 100,
-        /* .delta_t =*/ 10e-6,
+        /* .delta_t =*/ 10e-5,
         /* .r =*/ 0.01,
         /* .R =*/ 50,
         /* .periphery_size =*/ 1,
         /*.q_plus_max =*/ 15e-10,
-        /*.q_minus_max =*/ 3e-9,
+        /*.q_minus_max =*/ -3e-9,
         /*.Q_plus_s =*/ 4e-4,
         /*.Q_minus_s =*/ 8e-4,
         /*.resistance =*/ 1,
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
     lt.AllParams();
     lt.Info();
 
-    int n_iter = 1000000;
+    int n_iter = 100;
     start = std::chrono::system_clock::now();
     /*WriteAnswer(1, lt);
     auto response = ReadResponse();*/
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
         {
             lt.NextIter();
 
-            if(i % 20000 == 0){
+            if(i % 10 == 0){
                 //lt.ReturnFiles(path_data);
                 //lt.ReturnPhi(path_data, lt.start_r, lt.end_r);
                 lt.Info();

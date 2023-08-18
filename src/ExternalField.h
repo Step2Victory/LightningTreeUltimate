@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <functional>
+#include <numbers>
 
 constexpr double epsilon_0 = 8.854187817619999806e-12;
 constexpr double kEps = 1e-9;
@@ -55,7 +56,7 @@ std::function<double(const std::array<double, 3>&)> constExternalField(double ex
 {
     std::function<double(const std::array<double, 3>&)> result = [external_field = std::move(external_field)](const std::array<double, 3>& coords)
     {
-        return external_field;
+        return coords[2] * external_field;
     };
     return result;
 }

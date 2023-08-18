@@ -134,7 +134,7 @@ LightningTree::LightningTree(
                .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1], end_r[2] - start_r[2] + h},
                .number_edges = 0,
                .growless_iter_number = 0});
-    edges.push_back(Edge{.from = 0, .to = 1, .current = 0, .sigma = 0});
+    edges.push_back(Edge{.from = 0, .to = 1, .current = 0, .sigma = sigma});
     edges_activity.push_back(true);
     graph.push_back(CreateNode(edges.size() - 1, {1, 1, 2}));
     graph.push_back(CreateNode(edges.size() - 1, {1, 1, 0}));
@@ -145,10 +145,12 @@ void LightningTree::NextIter()
     /*
     Описание метода
     */
-    Transport();
     CountPotential();
     CountSigma();
     CountCurrent();
+    Transport();
+    
+    
     /*Grow();
     Delete();*/
     double grow_time_period = 0.001;
@@ -261,8 +263,8 @@ LightningTree::cubic_grid LightningTree::CreateNode(size_t edge_id, const std::a
     /*
     Описание метода
     */
-    cubic_grid node = {{{-1}}};
-    /*for (int i = 0; i < 3; i++) 
+    cubic_grid node;
+    for (int i = 0; i < 3; i++) 
     {
         for (int j = 0; j < 3; j++) 
         {
@@ -271,7 +273,7 @@ LightningTree::cubic_grid LightningTree::CreateNode(size_t edge_id, const std::a
                 node[i][j][k] = -1;
             }
         }
-    }*/
+    }
     node[1][1][1] = 0;
     vertices_peripherality.push_back(true);
     vertices_activity.push_back(true);
@@ -292,7 +294,7 @@ void LightningTree::Transport() {
                 for (int k = 0; k < 3; k++) 
                 {
                     int e_id = graph[g_id][i][j][k];
-                    if ((e_id == -1 || !edges_activity[e_id]) &&
+                    if (e_id == -1 || !edges_activity[e_id] ||
                         (i == 1 && j == 1 && k == 1))
                         continue;
 
@@ -308,7 +310,7 @@ void LightningTree::Transport() {
                 }
             }
         }
-        if (vertices[g_id].q > q_plus_max) 
+        if ( vertices[g_id].q > q_plus_max) 
         {
             vertices[g_id].Q += vertices[g_id].q - q_plus_max;
             vertices[g_id].q = q_plus_max;
