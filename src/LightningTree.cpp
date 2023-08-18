@@ -1,7 +1,7 @@
 #include "LightningTree.h"
 
-#include "yaml-cpp/yaml.h"
-#include <glog/logging.h>
+//#include "yaml-cpp/yaml.h"
+//#include <glog/logging.h>
 
 #include <numbers>
 #include <cmath>
@@ -12,8 +12,8 @@
 #include "RandomDirections.h"
 
 
-LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) 
-{
+ /*LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) 
+ {
     YAML::Node config = YAML::LoadFile(path_to_config_file);
     h = config["h"].as<double>();
     delta_t = config["delta_t"].as<double>();
@@ -58,16 +58,32 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file)
     dis = std::uniform_real_distribution<>(0, 1);
 
     iter_number = 0;
-}
+    vertices.push_back(
+        Vertex{.q = 0,
+               .Q = 0,
+               .Phi = 0,
+               .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1], end_r[2] - start_r[2] - h},
+               .number_edges = 0,
+               .growless_iter_number = 0});
+    vertices.push_back(
+        Vertex{.q = 0,
+               .Q = 0,
+               .Phi = 0,
+               .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1], end_r[2] - start_r[2] + h},
+               .number_edges = 0,
+               .growless_iter_number = 0});
+    edges.push_back(Edge{.from = 0, .to = 1, .current = 0, .sigma = 0});
+    edges_activity.push_back(true);
+    graph.push_back(CreateNode(edges.size() - 1, {1, 1, 2}));
+    graph.push_back(CreateNode(edges.size() - 1, {1, 1, 0}));
+ }*/
 
 LightningTree::LightningTree(
     double h, double delta_t, double r, double R,
     size_t periphery_size, double q_plus_max, double q_minus_max,
     double Q_plus_s, double Q_minus_s, double resistance,
-    double E_plus, double E_minus, double alpha, double beta,
-    double sigma,
-    std::function<double(const std::array<double, 3>&)>
-        external_field_potential, int seed)
+    double E_plus, double E_minus, double alpha, double beta, double sigma, std::array<double, 3> start_r,
+                             std::array<double, 3> end_r, double degree_probability_growth, int seed)
     : h(h),
       delta_t(delta_t),
       r(r),
@@ -83,20 +99,45 @@ LightningTree::LightningTree(
       alpha(alpha),
       beta(beta),
       sigma(sigma),
-      external_field_potential(countExternalField(
-        std::vector({
-            ChargeLayer{.p_0 = -0.0000007, .h = h, .L = 200, .r=std::array<double, 3>{0, 0, 8000}, .a=1},
-            ChargeLayer{.p_0 = 0.0000007, .h = h, .L = 200, .r=std::array<double, 3>{0, 0, 10000}, .a=1}}
-            ), 
-        std::array<double, 3>{-5*h, -5*h, 9000 - 20 * h},
-        std::array<double, 3>{5 * h, 5 * h, 9000 + 20 * h},
-        h)
-    ),
-    seed(42) 
+      start_r(start_r),
+      end_r(end_r),
+    //   external_field_potential(countExternalField(
+    //     std::vector({
+    //         ChargeLayer{.p_0 = -0.0000007, .h = h, .L = 200, .r = start_r, .a = 1},
+    //         ChargeLayer{.p_0 = 0.0000007, .h = h, .L = 200, .r = end_r, .a = 1}}
+    //         ), 
+    //     std::array<double, 3>{end_r[0] - start_r[0] - 5 * h, end_r[1] - start_r[1] - 5 * h, end_r[2] - start_r[2] - 20 * h},
+    //     std::array<double, 3>{end_r[0] - start_r[0] + 5 * h, end_r[1] - start_r[1] + 5 * h, end_r[2] - start_r[2] + 20 * h},
+    //     h)
+    //   ),
+      external_field_potential(constExternalField(100000.0)),
+      degree_probability_growth(degree_probability_growth),
+      seed(seed) 
 {
+    /*
+    Описание конструктора
+    */
     gen = std::mt19937(seed);
     dis = std::uniform_real_distribution<>(0, 1);
-    // TO DO
+    iter_number = 0;
+    vertices.push_back(
+        Vertex{.q = 0,
+               .Q = 0,
+               .Phi = 0,
+               .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1], end_r[2] - start_r[2] - h},
+               .number_edges = 0,
+               .growless_iter_number = 0});
+    vertices.push_back(
+        Vertex{.q = 0,
+               .Q = 0,
+               .Phi = 0,
+               .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1], end_r[2] - start_r[2] + h},
+               .number_edges = 0,
+               .growless_iter_number = 0});
+    edges.push_back(Edge{.from = 0, .to = 1, .current = 0, .sigma = 0});
+    edges_activity.push_back(true);
+    graph.push_back(CreateNode(edges.size() - 1, {1, 1, 2}));
+    graph.push_back(CreateNode(edges.size() - 1, {1, 1, 0}));
 }
 
 void LightningTree::NextIter() 
@@ -104,9 +145,12 @@ void LightningTree::NextIter()
     /*
     Описание метода
     */
+    Transport();
     CountPotential();
     CountSigma();
     CountCurrent();
+    /*Grow();
+    Delete();*/
     double grow_time_period = 0.001;
     int grow_iter_period = grow_time_period / delta_t;
     if (iter_number % grow_iter_period == 0) 
@@ -218,16 +262,16 @@ LightningTree::cubic_grid LightningTree::CreateNode(size_t edge_id, const std::a
     Описание метода
     */
     cubic_grid node = {{{-1}}};
-    // for (int i = 0; i < 3; i++) 
-    // {
-    //     for (int j = 0; j < 3; j++) 
-    //     {
-    //         for (int k = 0; k < 3; k++) 
-    //         {
-    //             node[i][j][k] = -1;
-    //         }
-    //     }
-    // }
+    /*for (int i = 0; i < 3; i++) 
+    {
+        for (int j = 0; j < 3; j++) 
+        {
+            for (int k = 0; k < 3; k++) 
+            {
+                node[i][j][k] = -1;
+            }
+        }
+    }*/
     node[1][1][1] = 0;
     vertices_peripherality.push_back(true);
     vertices_activity.push_back(true);
@@ -247,7 +291,7 @@ void LightningTree::Transport() {
             {
                 for (int k = 0; k < 3; k++) 
                 {
-                    size_t e_id = graph[g_id][i][j][k];
+                    int e_id = graph[g_id][i][j][k];
                     if ((e_id == -1 || !edges_activity[e_id]) &&
                         (i == 1 && j == 1 && k == 1))
                         continue;
@@ -284,7 +328,7 @@ void LightningTree::Grow()
     */
     // TO DO
     std::vector<cubic_grid> temp_graph;
-    for (size_t v_from_id = graph.size(); v_from_id-- >= 0;) 
+    for (size_t v_from_id = graph.size(); v_from_id-- > 0;) 
     {
         if(!vertices_activity[v_from_id]) continue;
         bool notGrow = true;
@@ -297,19 +341,19 @@ void LightningTree::Grow()
         // for (int i = 0; i < 3; i++) {
         //     for (int j = 0; j < 3; j++) {
         //         for (int k = 0; k < 3; k++) {
-                    size_t e_id = graph[v_from_id][i][j][k];
+                    int e_id = graph[v_from_id][i][j][k];
 
                     if ((i == 1 && j == 1 && k == 1)) continue;
 
                     if (e_id == -1)
                     {
-                        int v_to_id = -1;
+                        size_t v_to_id;
                         bool new_vertex = true;
-                        std::array<double, 3> coords = countCoords(v_from_id, std::array{i, j, k});
+                        std::array<double, 3> coords = countCoords(v_from_id, {i, j, k});
 
                         // Проверка на наличие вершины в векторе вершин по координатам.
                         
-                        for(size_t id = vertices.size(); id-- >= 0;)
+                        for(size_t id = vertices.size(); id-- > 0;)
                         {
                             if(vertices_activity[id]) continue;
                             // if(vertices[id].coords == coords) 
@@ -322,7 +366,7 @@ void LightningTree::Grow()
                                 break;
                             }
                         }
-                        if(v_to_id == -1)
+                        if (new_vertex)
                         {
                             Vertex new_vertex = {.q = 0, 
                                             .Q = 0,
@@ -336,6 +380,7 @@ void LightningTree::Grow()
 
                         if (GrowthCriterion(v_from_id, v_to_id)) 
                         {
+                            //std::cout << "grow" << '\n';
                             notGrow = false;
                             vertices_peripherality[v_from_id] = false;
                             vertices[v_from_id].number_edges++;
@@ -347,7 +392,7 @@ void LightningTree::Grow()
                             edges.push_back(new_edge);
                             edges_activity.push_back(true);
                             graph[v_from_id][i][j][k] = edges.size() - 1;
-                            if(new_vertex) temp_graph.push_back(CreateNode(edges.size() - 1, std::array{i, j, k}));
+                            if(new_vertex) temp_graph.push_back(CreateNode(edges.size() - 1, {i, j, k}));
                             else 
                             {
                                 vertices_activity[v_to_id] = true;
@@ -363,6 +408,7 @@ void LightningTree::Grow()
                         // проверка неактивного ребра                
                         if (GrowthCriterion(v_from_id, edges[e_id].to)) 
                         {
+                            //std::cout << "grow" << '\n';
                             notGrow = false;
                             vertices_peripherality[v_from_id] = false;
                             vertices[v_from_id].number_edges++;
@@ -402,7 +448,7 @@ void LightningTree::Delete()
                 {
                     for (int k = 0; k < 3; k++) 
                     {
-                        size_t e_id = graph[v_id][i][j][k];
+                        int e_id = graph[v_id][i][j][k];
                         if ((e_id == -1 || !edges_activity[e_id]) ||
                             (i == 1 && j == 1 && k == 1))
                             continue;
@@ -422,12 +468,12 @@ void LightningTree::Delete()
     }
 }
 
-bool LightningTree::GrowthCriterion(const size_t v_from_id,
-                                    const size_t v_to_id) const 
+bool LightningTree::GrowthCriterion(const size_t v_from_id, const size_t v_to_id) const 
 {
     /*
     Описание метода
     */
+    //std::cout << "try grow" << '\n';
     double probability = dis(gen);
     double E = CountElectricity(v_from_id, v_to_id);
     if (E > E_plus) 
@@ -452,9 +498,9 @@ bool LightningTree::DeletionCriterion(size_t vertex_id) const
             periphery_size);
 }
 
-void LightningTree::AllParams() 
+void LightningTree::AllParams() const 
 {
-    LOG(INFO) << "h: " << h << '\n'
+    /* LOG(INFO)*/std::cout << "h: " << h << '\n'
         << "delta_t: " << delta_t << '\n'
         << "r: " << r << '\n'
         << "R: " << R << '\n'
@@ -469,13 +515,15 @@ void LightningTree::AllParams()
         << "alpha: " << alpha << '\n'
         << "beta: " << beta << '\n'
         << "sigma: " << sigma << '\n'
-        << "seed: " << seed;
+        << "external field " << external_field_potential({end_r[0] - start_r[0], end_r[1] - start_r[1], end_r[2] - start_r[2]}) << '\n'
+        << "seed: " << seed << '\n';
 }
 
-void LightningTree::Info() 
+void LightningTree::Info() const
 {
-    LOG(INFO) << "iter_number: " << iter_number << '\n' 
-        << "number_of_vertices: " << vertices.size();
+    /* LOG(INFO)*/std::cout << "iter_number: " << iter_number << '\t'
+                             << "number_of_vertices: " << vertices.size() << '\t'
+                             << "q: " << vertices[1].q << '\t' << "Q: " << vertices[1].Q << '\n';
 }
 
 void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data)

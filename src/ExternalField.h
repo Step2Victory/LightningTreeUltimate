@@ -51,6 +51,15 @@ double Potential(
     return result;
 }
 
+std::function<double(const std::array<double, 3>&)> constExternalField(double external_field)
+{
+    std::function<double(const std::array<double, 3>&)> result = [external_field = std::move(external_field)](const std::array<double, 3>& coords)
+    {
+        return external_field;
+    };
+    return result;
+}
+
 std::function<double(const std::array<double, 3>&)> countExternalField(
     const std::vector<ChargeLayer>& layers, 
     const std::array<double, 3>& start, 
