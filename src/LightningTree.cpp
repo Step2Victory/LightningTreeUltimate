@@ -1,7 +1,7 @@
 #include "LightningTree.h"
 
-//#include "yaml-cpp/yaml.h"
-//#include <glog/logging.h>
+#include "yaml-cpp/yaml.h"
+#include <glog/logging.h>
 
 #include <numbers>
 #include <cmath>
@@ -502,7 +502,7 @@ bool LightningTree::DeletionCriterion(size_t vertex_id) const
 
 void LightningTree::AllParams() const 
 {
-    /* LOG(INFO)*/std::cout << "h: " << h << '\n'
+    LOG(INFO) << "h: " << h << '\n'
         << "delta_t: " << delta_t << '\n'
         << "r: " << r << '\n'
         << "R: " << R << '\n'
@@ -523,9 +523,14 @@ void LightningTree::AllParams() const
 
 void LightningTree::Info() const
 {
-    /* LOG(INFO)*/std::cout << "iter_number: " << iter_number << '\t'
+    LOG(INFO)<< "iter_number: " << iter_number << '\t'
                              << "number_of_vertices: " << vertices.size() << '\t'
                              << "q: " << vertices[1].q << '\t' << "Q: " << vertices[1].Q << '\n';
+}
+
+void LightningTree::WriteResponse(int response) const
+{
+    std::cout << response << ' ' << iter_number << ' ' << vertices.size() <<  ' ' << iter_number * delta_t << std::endl;
 }
 
 void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data)
@@ -566,5 +571,5 @@ void LightningTree::ReturnPhi(const std::filesystem::path& path_to_data, const s
         }
         fout << z << ' ' << full_sum * (h * h) / ((end_r[0] - start_r[0]) * (end_r[1] - start_r[1])) << ' ' << ext_sum * (h * h) / ((end_r[0] - start_r[0]) * (end_r[1] - start_r[1])) << '\n';
     }
-fout.close();
+    fout.close();
 }

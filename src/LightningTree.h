@@ -37,6 +37,7 @@ public:
 
     void AllParams() const;
     void Info() const;
+    void WriteResponse(int response) const;
     void ReturnFiles(const std::filesystem::path&);
     void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&, const std::array<double, 3>&);
 
