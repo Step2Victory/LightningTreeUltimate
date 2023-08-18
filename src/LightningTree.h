@@ -1,9 +1,8 @@
 #include <vector>
 #include <array>
 #include <functional>
-#include <cmath>
-#include <random>
 #include <filesystem>
+#include <random>
 
 class LightningTree {
 private:
@@ -17,18 +16,17 @@ public:
                   double q_minus_max, double Q_plus_s,
                   double Q_minus_s, double resistance, double E_plus,
                   double E_minus, double alpha, double beta,
-                  double sigma,
-                  std::function<double(const std::array<double, 3>&)>
-                      external_field_potential, int seed);
+                  double sigma, std::array<double, 3> start_r, std::array<double, 3> end_r,
+                  double degree_probability_growth, int seed);
     void NextIter();
     void CountSigma();
+    double potencial(const std::array<double, 3>&);
     void CountPotential();
     double CountElectricity(size_t, size_t) const;
     void CountCurrent();
-    void countCoords(std::array<double, 3>&, size_t,
-                     const std::vector<int>&);
-    cubic_grid CreateNode(size_t, size_t, const std::vector<int>&);
-    size_t find_index_node(size_t);
+    std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
+    double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
+    cubic_grid CreateNode(size_t, const std::array<int, 3>&);
 
     void Transport();
     void Grow();
@@ -37,14 +35,21 @@ public:
     bool GrowthCriterion(size_t, size_t) const;
     bool DeletionCriterion(size_t) const;
 
-    void AllParams();
-    void Info();
+    void AllParams() const;
+    void Info() const;
+    void ReturnFiles(const std::filesystem::path&);
+    void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&, const std::array<double, 3>&);
+
+    const std::array<double, 3> start_r;
+    const std::array<double, 3> end_r;
+
 private:
     struct Vertex {
         double q;
         double Q;
         double Phi;
         std::array<double, 3> coords;
+        size_t number_edges;
         size_t growless_iter_number;
     };
 
@@ -69,6 +74,7 @@ private:
     double alpha;
     double beta;
     double sigma;
+    double degree_probability_growth;
     size_t periphery_size;
     std::function<double(const std::array<double, 3>&)>
         external_field_potential;
