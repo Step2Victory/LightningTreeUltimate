@@ -121,8 +121,8 @@ LightningTree::LightningTree(double h, double delta_t, double r, double R,
         Vertex{.q = 0,
                .Q = 0,
                .Phi = 0,
-               .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1],
-                          end_r[2] - start_r[2] - h},
+               .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
+                          (end_r[2] + start_r[2]) / 2 - h},
                 .internal_coords = {0, 0, 0},
                .number_edges = 0,
                .growless_iter_number = 0});
@@ -130,8 +130,8 @@ LightningTree::LightningTree(double h, double delta_t, double r, double R,
         Vertex{.q = 0,
                .Q = 0,
                .Phi = 0,
-               .coords = {end_r[0] - start_r[0], end_r[1] - start_r[1],
-                          end_r[2] - start_r[2]},
+               .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
+                          (end_r[2] + start_r[2]) / 2},
                 .internal_coords = {0, 0, 1},
                .number_edges = 0,
                .growless_iter_number = 0});
@@ -485,7 +485,7 @@ void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data) {
     fout << "id" << ' ' << 'q' << ' ' << 'Q' << ' ' << 'x' << ' ' << 'y' << ' '
          << 'z' << ' ' << "phi" << '\n';
     for (int i = 0; i < vertices.size(); i++) {
-        fout << i << ' ' << vertices[i].q << ' ' << vertices[i].Q << ' '
+        fout << "lt_" << i << ' ' << vertices[i].q << ' ' << vertices[i].Q << ' '
              << vertices[i].coords[0] << ' ' << vertices[i].coords[1] << ' '
              << vertices[i].coords[2] << ' ' << vertices[i].Phi << '\n';
     }
@@ -496,7 +496,7 @@ void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data) {
     for (int i = 0; i < edges.size(); i++) {
         if (!edges_activity[i])
             continue;
-        fout << i << ' ' << edges[i].from << ' ' << edges[i].to << ' '
+        fout << "lt_" << i << ' ' << "lt_" << edges[i].from << ' ' << "lt_" << edges[i].to << ' '
              << edges[i].current << ' ' << edges[i].sigma << '\n';
     }
     fout.close();

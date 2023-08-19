@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
     google::SetLogDestination(google::GLOG_INFO,"./logs/INFO_");
 
     auto project_path = std::filesystem::current_path();
+    //auto project_path = ""
     auto path_data = project_path / "LightningTree_data";
     auto start = std::chrono::system_clock::now();
     //auto lt = LightningTree(project_path / "configs" / "testing.yaml");
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
     auto end = std::chrono::system_clock::now();
     lt.AllParams();
     lt.Info();
-
+    
     int n_iter = 100;
     start = std::chrono::system_clock::now();
     lt.WriteResponse(1);

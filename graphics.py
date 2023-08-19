@@ -5,8 +5,7 @@ import math, io
 # import time, multiprocessing as mps
 
 from plotly.subplots import make_subplots
-from jupyter_dash import JupyterDash
-from dash import dcc, html, Output, Input, State, ctx
+from dash import Dash, dcc, html, Output, Input, State, ctx
 from PIL import Image
 import os
 import subprocess
@@ -17,7 +16,7 @@ k = 1 / (4 * math.pi * eps0)
 dimension = {'sum Q + q':'Кл', 'avg I':'А', 'avg Sigma':'См', 'sum Phi':'В', 'full Phi':'В'}
 
 # path_to_cpp_exe = 'out/build/x64-Release/LightningTree.exe' # Visual studio
-path_to_project = '/home/step/LightningTreeUltimate/'
+path_to_project = '/home/volnik/LightningTreeUltimate/'
 p = None
 
 def start_subprocess():
@@ -58,7 +57,7 @@ def read_subprocess():
             time = float(answer[-1])
             print("Номер итерации: ", iter_number)
             print("Количество зарядов в графе", charges_number)
-            print("Время от начала процессв", time)
+            print("Время от начала процесса", time)
             return response
         except ValueError:
             print("Получено не число")
@@ -148,13 +147,13 @@ class LightningTree(object):
         # else:
         try:
             result = pd.read_csv(filename, delim_whitespace=True)
-        except pd.errors.EmptyDataError:
+        except : #pd.errors.EmptyDataError or FileNotFoundError:
             if 'vertex_table' in filename:
-                result = pd.DataFrame([["lt1", 0, 0, 0, 0, 9000, 618974], ["lt2",  0, 0, 0, 0, 9100, 1.99509e+07]], columns=["id", 'q', 'Q', 'x', 'y', 'z', "phi"])
+                result = pd.DataFrame([[1, 0, 0, 0, 0, 9000, 618974], [2,  0, 0, 0, 0, 9100, 1.99509e+07]], columns=["id", 'q', 'Q', 'x', 'y', 'z', "phi"])
             elif 'edge_table' in filename:
-                result = pd.DataFrame(["lt1", "lt1", "lt2", 0.00060733, 1e-05], columns=["id", "from", "to", "current", "sigma"])
+                result = pd.DataFrame([1, 1, 2, 0.00060733, 1e-05], columns=["id", "from", "to", "current", "sigma"])
             elif 'phi_info' in filename:
-                result = pd.DataFrame([7000, -5.80393e+07, -5.80393e+07], [7100, -6.5424e+07, -6.5424e+07], columns=["z", "full_phi", "ext_phi"])
+                result = pd.DataFrame([[7000, -5.80393e+07, -5.80393e+07], [7100, -6.5424e+07, -6.5424e+07]], columns=["z", "full_phi", "ext_phi"])
         return result
 
 
@@ -370,7 +369,7 @@ def run(folder:str, mode:str='external', interval:int=False):
     interval: интервал обновления в секундах
     """
     # Создание Dash-приложения
-    app = JupyterDash('SimpleExemple')
+    app = Dash()#'SimpleExemple')
     disable = True
 
     lt_history = [LightningTree(folder)]
@@ -499,7 +498,7 @@ def run(folder:str, mode:str='external', interval:int=False):
         return disabled, False
     
     
-    app.run_server(mode=mode)
+    app.run_server()
 
 
 # def create_gif(folder:str, names:str|list[str], format:str='jpg', start:int=0, end:int=10):
