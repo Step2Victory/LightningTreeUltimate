@@ -9,21 +9,24 @@ from dash import Dash, dcc, html, Output, Input, State, ctx
 from PIL import Image
 import os
 import subprocess
+import flask
+import time
 
+server = flask.Flask(__name__)
 
 eps0 = 8.85418781281313131313e-12
 k = 1 / (4 * math.pi * eps0)
 dimension = {'sum Q + q':'Кл', 'avg I':'А', 'avg Sigma':'См', 'sum Phi':'В', 'full Phi':'В'}
 
 # path_to_cpp_exe = 'out/build/x64-Release/LightningTree.exe' # Visual studio
-path_to_project = '/home/volnik/LightningTreeUltimate/'
+path_to_project = '/home/' +os.environ['USER'] + '/LightningTreeUltimate/'
 p = None
 
 def start_subprocess():
     global p
     if p is None:
         print("Собираем бинарь плюсов")
-        subprocess.run(["cmake", "."])
+        subprocess.run(["cmake","-DCMAKE_BUILD_TYPE=Release", "."])
         subprocess.run(["make"])
         print("Подпроцесс моделирования молнии запускается")
         p = subprocess.Popen([path_to_project + "/main"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT)
@@ -61,6 +64,7 @@ def read_subprocess():
             return response
         except ValueError:
             print("Получено не число")
+            print(answer)
             return -2
     return -1
 
@@ -92,8 +96,10 @@ class LightningTree(object):
         self.df_vertex = self.open_file(folder+'/vertex_table.txt')
         self.df_edge = self.open_file(folder+'/edge_table.txt')
         self.df_phi_info = self.open_file(folder+'/phi_info.txt')
-        
-        self.df_edge['z'] = self.df_edge.apply(lambda row: (self.df_vertex[self.df_vertex['id'] == row['from']]['z'].item() + self.df_vertex[self.df_vertex['id'] == row['to']]['z'].item()) / 2, axis=1)
+        if not self.df_edge.empty:
+            self.df_edge['z'] = self.df_edge.apply(lambda row: (self.df_vertex[self.df_vertex['id'] == row['from']]['z'].item() + self.df_vertex[self.df_vertex['id'] == row['to']]['z'].item()) / 2, axis=1)
+        else:
+            self.df_edge['z'] = []
         # self.df_q_history = self.open_file(folder+'/q_history_1.txt')
         # self.df_Q_history = self.open_file(folder+'/Q_history.txt')
     
@@ -151,7 +157,7 @@ class LightningTree(object):
             if 'vertex_table' in filename:
                 result = pd.DataFrame([[1, 0, 0, 0, 0, 9000, 618974], [2,  0, 0, 0, 0, 9100, 1.99509e+07]], columns=["id", 'q', 'Q', 'x', 'y', 'z', "phi"])
             elif 'edge_table' in filename:
-                result = pd.DataFrame([1, 1, 2, 0.00060733, 1e-05], columns=["id", "from", "to", "current", "sigma"])
+                result = pd.DataFrame([[1, 1, 2, 0.00060733, 1e-05]], columns=["id", "from", "to", "current", "sigma"])
             elif 'phi_info' in filename:
                 result = pd.DataFrame([[7000, -5.80393e+07, -5.80393e+07], [7100, -6.5424e+07, -6.5424e+07]], columns=["z", "full_phi", "ext_phi"])
         return result
@@ -359,7 +365,133 @@ def out_animations(lt_history:list[LightningTree], folder:str, format:str='jpg')
     print('Экпорт завершён')
 
 
-def run(folder:str, mode:str='external', interval:int=False):
+disable = True
+folder = "LightningTree_data"
+
+lt_history = [LightningTree(folder)]
+lt_history[0].plot_tree()
+lt_history[0].plots()
+
+# # Создание Dash-приложения
+app = Dash(__name__, server=server) #'SimpleExemple')
+# Настройка и запуск Dash-приложения в зависимости от параметра
+app.layout = html.Div([html.H1("Моделирование молнии", style={'textAlign': 'center', 'color': 'gold'}),
+                    
+                    dcc.Interval(id='interval-component', interval=1000, n_intervals=0, disabled=disable),
+                    
+                    html.Div(["Параметр 1:", dcc.Input(id='param1', value='0.0', type='number'),
+                                "Параметр 2:", dcc.Input(id='param2', value='0.0', type='number'),
+                                "Параметр 3:", dcc.Input(id='param3', value='0.0', type='number'),
+                                "Параметр 4: ",dcc.Input(id='param4', value='0.0', type='number'),
+                                html.Button('Старт', id='start_button', n_clicks=0),
+                                html.Button('Пауза', id='pause_button', n_clicks=0),
+                                html.Button('Стоп', id='stop_button', n_clicks=0),
+                                html.Button('Экспорт анимации', id='export_button', n_clicks=0)]),
+
+                    html.Div([html.Div([html.H4("Графики", style={'textAlign': 'center'}),
+                                        # dcc.Dropdown(options=[{'label':"Распределение суммы зарядов по высоте", 'value':'sum_q'}, 
+                                        #                       {'label': "Распределение среднего значения зарядов по высоте", 'value':'avg_q'},
+                                        #                       {'label': "Распределение потенциала по высоте", 'value':'Phi'},
+                                        #                       {'label': "Распределение токов по высоте", "value" : "current"},
+                                        #                       {'label': "По умолчанию", 'value':'default'}], value='default', id='dropdown'),
+                                        html.Div([dcc.Graph(figure=lt_history[-1].figure_plots['sum Q + q'], id='plot_q', style={'height': '40vh', 'width': '33%'}),
+                                                    dcc.Graph(figure=lt_history[-1].figure_plots['avg I'], id='plot_i', style={'height': '40vh', 'width': '32%'}),
+                                                    dcc.Graph(figure=lt_history[-1].figure_plots['avg Sigma'], id='plot_sigma', style={'height': '40vh', 'width': '32%'})],
+                                                    style={'display': 'flex', 'vertical-align':'top'}),
+                                        html.Div([dcc.Graph(figure=lt_history[-1].figure_plots['sum Phi'], id='plot_phi', style={'height': '40vh', 'width': '49%'}),
+                                                    dcc.Graph(figure=lt_history[-1].figure_plots['full Phi'], id='plot_full_phi', style={'height': '40vh', 'width': '49%'})],
+                                                    style={'display': 'flex', 'vertical-align':'down'})],
+                                        style={'width': '39%'}),
+
+                                html.Div([html.H4("Граф дерева", style={'textAlign': 'center'}),
+                                        dcc.Graph(figure=lt_history[-1].figure_tree, id='graph_tree', style={'height': '80vh'})],
+                                        style={'width': '59%'})],
+                                        style={'display':'flex'}),
+
+                    html.Div(dcc.Slider(0, 1, step = 1, id='time_slider', disabled=disable))], style={'width': '100%'})
+
+
+@app.callback(Output('graph_tree', 'figure'),
+                Output('time_slider', 'max'),
+                Input('interval-component', 'n_intervals'),
+                Input('time_slider', 'value'))
+def update_graph_live(n, t):
+    # if n is None:
+    #     raise JupyterDash.exceptions.PreventUpdate
+    time = -1
+    if ctx.triggered_id == 'interval-component':
+        # print(p.stdout.readline())
+        response = read_subprocess()
+        if response == -1:
+            print("Процесс не запущен")
+        elif response == 1:
+            # print(response)
+            lt_history.append(LightningTree(folder))
+            lt_history[-1].plot_tree()
+            lt_history[-1].plots()
+            continue_subprocess()
+        elif response == 0:
+            # print(response)
+            end_subprocess()
+        else:
+            # print(response)
+            print("Ожидание подпроцесса")
+
+    if ctx.triggered_id == 'time_slider':
+        time = t
+        print("Выбран момент времени " + str(time))
+
+    return lt_history[time].figure_tree, len(lt_history)-1
+
+@app.callback(Output('plot_q', 'figure'),
+                Output('plot_i', 'figure'),
+                Output('plot_sigma', 'figure'),
+                Output('plot_phi', 'figure'),
+                Output('plot_full_phi', 'figure'),
+            #   Input('dropdown', 'value'),
+                Input('interval-component', 'n_intervals'),
+                Input('time_slider', 'value'))
+def update_plots(n, t):
+    time = -1
+
+    if ctx.triggered_id == 'time_slider':
+        time = t
+    
+    return list(lt_history[time].figure_plots.values())
+
+@app.callback(Output('interval-component', 'disabled'),
+                Output('time_slider', 'disabled'),
+                Input('start_button', 'n_clicks'),
+                Input('pause_button', 'n_clicks'),
+                Input('stop_button', 'n_clicks'),
+                Input('export_button', 'n_clicks'),
+                State('interval-component', 'disabled'))
+def action_process(start_clicks, pause_clicks, stop_clicks, export_clicks, disabled):
+    if ctx.triggered_id == 'start_button':
+        if disabled:
+            start_subprocess()
+            return (False, # включение обновления по интервалу времени
+                    False) # включение слайдера
+
+    if ctx.triggered_id == 'pause_button':
+        if not disabled:
+            print("Процесс приостановлен")
+        else: print("Процесс востановлен")
+        return (not disabled, # отключение или включение обновления по интервалу времени
+                False) # включение или отключение слайдера
+
+    if ctx.triggered_id == 'stop_button':
+        end_subprocess()
+        return (True, # отключение обновления по интервалу времени
+                False) # включение слайдера
+    
+    if ctx.triggered_id == 'export_button':
+        if disabled:
+            out_animations(lt_history, folder + "/Animations", 'jpg')
+    
+    return disabled, False
+
+def run():
     """
     Метод для запуска Dash-приложения
 
@@ -368,137 +500,7 @@ def run(folder:str, mode:str='external', interval:int=False):
     mode: Параметр запуска (inline - внутри jupyter; external - в браузере)
     interval: интервал обновления в секундах
     """
-    # Создание Dash-приложения
-    app = Dash()#'SimpleExemple')
-    disable = True
-
-    lt_history = [LightningTree(folder)]
-    lt_history[0].plot_tree()
-    lt_history[0].plots()
-    
-    if interval:
-        disable = False
-        start_subprocess()
-
-    # Настройка и запуск Dash-приложения в зависимости от параметра
-    app.layout = html.Div([html.H1("Моделирование молнии", style={'textAlign': 'center', 'color': 'gold'}),
-                        
-                        dcc.Interval(id='interval-component', interval=1000, n_intervals=0, disabled=disable),
-                        
-                        html.Div(["Параметр 1:", dcc.Input(id='param1', value='0.0', type='number'),
-                                  "Параметр 2:", dcc.Input(id='param2', value='0.0', type='number'),
-                                  "Параметр 3:", dcc.Input(id='param3', value='0.0', type='number'),
-                                  "Параметр 4: ",dcc.Input(id='param4', value='0.0', type='number'),
-                                  html.Button('Старт', id='start_button', n_clicks=0),
-                                  html.Button('Пауза', id='pause_button', n_clicks=0),
-                                  html.Button('Стоп', id='stop_button', n_clicks=0),
-                                  html.Button('Экспорт анимации', id='export_button', n_clicks=0)]),
-
-                        html.Div([html.Div([html.H4("Графики", style={'textAlign': 'center'}),
-                                            # dcc.Dropdown(options=[{'label':"Распределение суммы зарядов по высоте", 'value':'sum_q'}, 
-                                            #                       {'label': "Распределение среднего значения зарядов по высоте", 'value':'avg_q'},
-                                            #                       {'label': "Распределение потенциала по высоте", 'value':'Phi'},
-                                            #                       {'label': "Распределение токов по высоте", "value" : "current"},
-                                            #                       {'label': "По умолчанию", 'value':'default'}], value='default', id='dropdown'),
-                                            html.Div([dcc.Graph(figure=lt_history[-1].figure_plots['sum Q + q'], id='plot_q', style={'height': '40vh', 'width': '33%'}),
-                                                      dcc.Graph(figure=lt_history[-1].figure_plots['avg I'], id='plot_i', style={'height': '40vh', 'width': '32%'}),
-                                                      dcc.Graph(figure=lt_history[-1].figure_plots['avg Sigma'], id='plot_sigma', style={'height': '40vh', 'width': '32%'})],
-                                                      style={'display': 'flex', 'vertical-align':'top'}),
-                                            html.Div([dcc.Graph(figure=lt_history[-1].figure_plots['sum Phi'], id='plot_phi', style={'height': '40vh', 'width': '49%'}),
-                                                      dcc.Graph(figure=lt_history[-1].figure_plots['full Phi'], id='plot_full_phi', style={'height': '40vh', 'width': '49%'})],
-                                                      style={'display': 'flex', 'vertical-align':'down'})],
-                                            style={'width': '39%'}),
-
-                                  html.Div([html.H4("Граф дерева", style={'textAlign': 'center'}),
-                                            dcc.Graph(figure=lt_history[-1].figure_tree, id='graph_tree', style={'height': '80vh'})],
-                                            style={'width': '59%'})],
-                                            style={'display':'flex'}),
-
-                        html.Div(dcc.Slider(0, 1, step = 1, id='time_slider', disabled=disable))], style={'width': '100%'})
-    
-
-    @app.callback(Output('graph_tree', 'figure'),
-                  Output('time_slider', 'max'),
-                  Input('interval-component', 'n_intervals'),
-                  Input('time_slider', 'value'))
-    def update_graph_live(n, t):
-        # if n is None:
-        #     raise JupyterDash.exceptions.PreventUpdate
-        time = -1
-        if ctx.triggered_id == 'interval-component':
-            # print(p.stdout.readline())
-            response = read_subprocess()
-            if response == -1:
-                print("Процесс не запущен")
-            elif response == 1:
-                # print(response)
-                lt_history.append(LightningTree(folder))
-                lt_history[-1].plot_tree()
-                lt_history[-1].plots()
-                continue_subprocess()
-            elif response == 0:
-                # print(response)
-                end_subprocess()
-            else:
-                # print(response)
-                print("Ожидание подпроцесса")
-
-        if ctx.triggered_id == 'time_slider':
-            time = t
-            print("Выбран момент времени " + str(time))
-
-        return lt_history[time].figure_tree, len(lt_history)-1
-
-    @app.callback(Output('plot_q', 'figure'),
-                  Output('plot_i', 'figure'),
-                  Output('plot_sigma', 'figure'),
-                  Output('plot_phi', 'figure'),
-                  Output('plot_full_phi', 'figure'),
-                #   Input('dropdown', 'value'),
-                  Input('interval-component', 'n_intervals'),
-                  Input('time_slider', 'value'))
-    def update_plots(n, t):
-        time = -1
-
-        if ctx.triggered_id == 'time_slider':
-            time = t
-        
-        return list(lt_history[time].figure_plots.values())
-    
-    @app.callback(Output('interval-component', 'disabled'),
-                  Output('time_slider', 'disabled'),
-                  Input('start_button', 'n_clicks'),
-                  Input('pause_button', 'n_clicks'),
-                  Input('stop_button', 'n_clicks'),
-                  Input('export_button', 'n_clicks'),
-                  State('interval-component', 'disabled'))
-    def action_process(start_clicks, pause_clicks, stop_clicks, export_clicks, disabled):
-        if ctx.triggered_id == 'start_button':
-            if disabled:
-                start_subprocess()
-                return (False, # включение обновления по интервалу времени
-                        False) # включение слайдера
-
-        if ctx.triggered_id == 'pause_button':
-            if not disabled:
-                print("Процесс приостановлен")
-            else: print("Процесс востановлен")
-            return (not disabled, # отключение или включение обновления по интервалу времени
-                    False) # включение или отключение слайдера
-    
-        if ctx.triggered_id == 'stop_button':
-            end_subprocess()
-            return (True, # отключение обновления по интервалу времени
-                    False) # включение слайдера
-        
-        if ctx.triggered_id == 'export_button':
-            if disabled:
-                out_animations(lt_history, folder + "/Animations", 'jpg')
-        
-        return disabled, False
-    
-    
-    app.run_server()
+    app.run_server(debug = False)
 
 
 # def create_gif(folder:str, names:str|list[str], format:str='jpg', start:int=0, end:int=10):
@@ -535,9 +537,9 @@ def run(folder:str, mode:str='external', interval:int=False):
     #     for n in names:
     #         work(n)
 
-
+@server.route('/')
 def main():
-    run("LightningTree_data")
+    run()
 
     # lt = LightningTree("LightningTree_data")
     # print(dimension[str(lt.df_vertex.columns[2])])

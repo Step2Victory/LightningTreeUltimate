@@ -1,7 +1,9 @@
 #include "src/LightningTree.h"
+#include <yaml-cpp/yaml.h>
 #include <glog/logging.h>
 #include <iostream>
 #include <chrono>
+
 
 int ReadResponse()
 {
@@ -18,34 +20,16 @@ int main(int argc, char* argv[]) {
 
     auto project_path = std::filesystem::current_path();
     //auto project_path = ""
-    auto path_data = project_path / "LightningTree_data";
+    YAML::Node config = YAML::LoadFile(project_path / "configs" / "main.yaml");
+    auto path_data = project_path / config["path_to_data_for_python"].as<std::string>();
     auto start = std::chrono::system_clock::now();
-    //auto lt = LightningTree(project_path / "configs" / "testing.yaml");
-    auto lt = LightningTree(
-            /*.h = */ 100,
-        /* .delta_t =*/ 10e-6,
-        /* .r =*/ 0.01,
-        /* .R =*/ 50,
-        /* .periphery_size =*/ 1,
-        /*.q_plus_max =*/ 15e-10,
-        /*.q_minus_max =*/ -3e-9,
-        /*.Q_plus_s =*/ 4e-4,
-        /*.Q_minus_s =*/ 8e-4,
-        /*.resistance =*/ 1,
-        /*.E_plus =*/ 150000,
-        /*.E_minus =*/ 300000,
-        /*.alpha =*/ 5e-8,
-        /*.beta =*/ 10,
-        /*.sigma =*/ 1e-5,
-        /*.start_r =*/ {-1000, -1000, 7000},
-        /*.end_r =*/ {1000, 1000, 11000},
-        /*degree_probability_growth = */ 2.5,
-        /*.seed =*/ 42);
+    auto lt = LightningTree(project_path / "configs" / config["lt_config"].as<std::string>());
     auto end = std::chrono::system_clock::now();
     lt.AllParams();
     lt.Info();
     
-    int n_iter = 100;
+    int n_iter = config["number_of_iterations"].as<int>();
+    int input_period = config["input_files_iter_period"].as<int>();
     start = std::chrono::system_clock::now();
     lt.WriteResponse(1);
     auto response = ReadResponse();
@@ -57,7 +41,7 @@ int main(int argc, char* argv[]) {
         {
             lt.NextIter();
 
-            if(i % 10 == 0){
+            if(i % input_period == 0){
                 lt.ReturnFiles(path_data);
                 lt.ReturnPhi(path_data, lt.start_r, lt.end_r);
                 lt.WriteResponse(1);
@@ -78,7 +62,7 @@ int main(int argc, char* argv[]) {
         // lt->ReturnFiles(path_data / "vertex_table.txt", path_data / "edge_table.txt", path_data /"q_history_1.txt", path_data /"Q_history.txt");
     }
     end = std::chrono::system_clock::now();
-    // std::cout << "Time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << '\n'; 
+    LOG(INFO) << "Time: " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << '\n'; 
     // lt->Info();
     // // PrintCurrentState(*lt);
     lt.ReturnFiles(path_data);

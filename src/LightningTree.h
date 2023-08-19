@@ -1,3 +1,4 @@
+#pragma once
 #include <vector>
 #include <array>
 #include <functional>
@@ -46,8 +47,8 @@ public:
     void ReturnFiles(const std::filesystem::path&);
     void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&, const std::array<double, 3>&);
 
-    const std::array<double, 3> start_r;
-    const std::array<double, 3> end_r;
+    std::array<double, 3> start_r;
+    std::array<double, 3> end_r;
 
 private:
 

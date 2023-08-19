@@ -1,12 +1,12 @@
 h: 100
-delta_t: 10e-6
+delta_t: 1.0625e-07
 r: 0.01
 R: 50
 periphery_size: 1
-q_plus_max: 15e-10
-q_minus_max: 3e-9
-Q_plus_s: 4e-4
-Q_minus_s: 8e-4
+q_plus_max: 1.66898e-09
+q_minus_max: 3.33795e-09
+Q_plus_s: 0.000417244
+Q_minus_s: 0.000834488
 resistance: 1
 E_plus: 150000
 E_minus: 300000
@@ -14,13 +14,22 @@ alpha: 5e-8
 beta: 10
 sigma: 1e-5
 seed: 42
-p_0: 0.0000007
-L: 200
-start_x: 0
-start_y: 0
-start_z: 8000
-end_x: 0
-end_y: 0
-end_z: 10000
-a: 1
-degree_probability_growth: 2.5
+
+start_x: -500
+start_y: -500
+start_z: 7000
+end_x: 500
+end_y: 500
+end_z: 11000
+external_field_layers: 
+  - p_0 : -0.0000005
+    h: 100
+    L: 200
+    r: [0, 0, 8000]
+    a: 1
+  - p_0: 0.0000005
+    h: 100
+    L: 200
+    r: [0, 0, 10000]
+    a: 1
+degree_probability_growth: 1

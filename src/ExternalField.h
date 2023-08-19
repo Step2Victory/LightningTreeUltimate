@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -36,11 +37,12 @@ double Potential(const std::array<double, 3>& point,
                 if (l < kEps) {
                     result += q_values[i][j][k] /
                               (4 * std::numbers::pi * epsilon_0) *
-                              (1 / (h)-1 / (mirror_l));
-                }
-                result += q_values[i][j][k] /
+                              (1 / h - 1 / mirror_l);
+                } else {
+                    result += q_values[i][j][k] /
                           (4 * std::numbers::pi * epsilon_0) *
-                          (1 / (l)-1 / (mirror_l));
+                          (1 / l - 1 / mirror_l);
+                }
             }
         }
     }
@@ -116,7 +118,7 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
                 shift[0] >= potential_values.size() ||
                 shift[1] >= potential_values[0].size() ||
                 shift[1] >= potential_values[0][0].size()) {
-                std::cout << "Выход за границу расчетной области!\n";
+                LOG(INFO) << "Выход за границу расчетной области!\n";
                 // throw std::runtime_error{"Выход за границу расчетной
                 // области!"};
             }
