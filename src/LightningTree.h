@@ -3,6 +3,9 @@
 #include <functional>
 #include <filesystem>
 #include <random>
+#include <unordered_map>
+#include <map>
+
 
 class LightningTree {
 private:
@@ -20,11 +23,13 @@ public:
                   double degree_probability_growth, int seed);
     void NextIter();
     void CountSigma();
-    double potencial(const std::array<double, 3>&);
+    double Potential(const std::array<double, 3>&);
     void CountPotential();
     double CountElectricity(size_t, size_t) const;
     void CountCurrent();
     std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
+    std::array<int, 3> countInternalCoords(size_t, const std::array<int, 3>&);
+
     double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
     cubic_grid CreateNode(size_t, const std::array<int, 3>&);
 
@@ -45,11 +50,15 @@ public:
     const std::array<double, 3> end_r;
 
 private:
+
+    bool TryAddEdge(size_t v_from_id, const std::array<int, 3>& dir);
+
     struct Vertex {
         double q;
         double Q;
         double Phi;
         std::array<double, 3> coords;
+        std::array<int, 3> internal_coords;
         size_t number_edges;
         size_t growless_iter_number;
     };
@@ -90,6 +99,19 @@ private:
 
     std::vector<cubic_grid> graph;
 
+    struct Less {
+        bool operator()(const std::array<int, 3>& lhs, const std::array<int, 3>& rhs) const {
+            if (lhs[0] == rhs[0] && lhs[1] == rhs[1]) {
+                return lhs[2] < rhs[2];
+            }
+            if (lhs[0] == rhs[0]) {
+                return lhs[1] < rhs[1];
+            }
+            return lhs[0] < rhs[0];
+        }
+    };
+
+    std::map<std::array<int, 3>, int, Less> internal_coords_to_id; 
     size_t iter_number;
 
     int seed;

@@ -8,7 +8,8 @@ from plotly.subplots import make_subplots
 from jupyter_dash import JupyterDash
 from dash import dcc, html, Output, Input, State, ctx
 from PIL import Image
-from subprocess import Popen, PIPE, STDOUT
+import os
+import subprocess
 
 
 eps0 = 8.85418781281313131313e-12
@@ -16,14 +17,18 @@ k = 1 / (4 * math.pi * eps0)
 dimension = {'sum Q + q':'Кл', 'avg I':'А', 'avg Sigma':'См', 'sum Phi':'В', 'full Phi':'В'}
 
 # path_to_cpp_exe = 'out/build/x64-Release/LightningTree.exe' # Visual studio
-path_to_cpp_exe = '/home/step/LightningTreeUltimate/build/main'
+path_to_project = '/home/step/LightningTreeUltimate/'
 p = None
 
 def start_subprocess():
     global p
     if p is None:
-        print("Подрпроцесс моделирования молнии запущен")
-        p = Popen([path_to_cpp_exe], stdout = PIPE, stdin = PIPE, stderr = STDOUT)
+        print("Собираем бинарь плюсов")
+        subprocess.run(["cmake", "."])
+        subprocess.run(["make"])
+        print("Подпроцесс моделирования молнии запускается")
+        p = subprocess.Popen([path_to_project + "/main"], stdout = subprocess.PIPE, stdin = subprocess.PIPE, stderr = subprocess.STDOUT)
+        print("Подпроцесс моделирования молнии запущен")
         p.stdin.write(b'1\r\n')
         p.stdin.flush()
     else: print("Процесс уже запущен")
