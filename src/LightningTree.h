@@ -9,6 +9,7 @@
 
 
 class LightningTree {
+    struct Vertex;
 private:
     using cubic_grid =
         std::array<std::array<std::array<int, 3>, 3>, 3>;
@@ -26,19 +27,22 @@ public:
     void CountSigma();
     double Potential(const std::array<double, 3>&);
     void CountPotential();
-    double CountElectricity(size_t, size_t) const;
+    double CountElectricity(const Vertex& from, const Vertex& to) const;
     void CountCurrent();
     std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
     std::array<int, 3> countInternalCoords(size_t, const std::array<int, 3>&);
 
     double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
     cubic_grid CreateNode(size_t, const std::array<int, 3>&);
+    cubic_grid CreateEmptyNode();
+    size_t addVertex(Vertex);
+    size_t addEdge(size_t, size_t);
 
     void Transport();
     void Grow();
     void Delete();
 
-    bool GrowthCriterion(size_t, size_t) const;
+    bool GrowthCriterion(const Vertex& vertex_from, const Vertex& vertex_to) const;
     bool DeletionCriterion(size_t) const;
 
     void AllParams() const;

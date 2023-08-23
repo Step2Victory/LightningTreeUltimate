@@ -16,9 +16,9 @@ int main(int argc, char* argv[]) {
     // Initialize Google’s logging library.
     auto t = std::chrono::system_clock::now();
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::GLOG_INFO,"./logs/INFO_");
+    google::SetLogDestination(google::GLOG_INFO,".././logs/INFO_");
 
-    auto project_path = std::filesystem::current_path();
+    auto project_path = std::filesystem::current_path();//.parent_path();
     //auto project_path = ""
     YAML::Node config = YAML::LoadFile(project_path / "configs" / "main.yaml");
     auto path_data = project_path / config["path_to_data_for_python"].as<std::string>();
@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
             if(i % input_period == 0){
                 lt.ReturnFiles(path_data);
                 lt.ReturnPhi(path_data, lt.start_r, lt.end_r);
+                lt.Info();
                 lt.WriteResponse(1);
                 
                 response = ReadResponse();
@@ -58,7 +59,6 @@ int main(int argc, char* argv[]) {
             lt.WriteResponse(0);
             return 0;
         }
-        lt.Info();
         // lt->ReturnFiles(path_data / "vertex_table.txt", path_data / "edge_table.txt", path_data /"q_history_1.txt", path_data /"Q_history.txt");
     }
     end = std::chrono::system_clock::now();
