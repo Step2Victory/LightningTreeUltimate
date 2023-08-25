@@ -32,7 +32,7 @@ public:
     std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
     std::array<int, 3> countInternalCoords(size_t, const std::array<int, 3>&);
 
-    double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
+    // double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
     cubic_grid CreateNode(size_t, const std::array<int, 3>&);
     cubic_grid CreateEmptyNode();
     size_t addVertex(Vertex);

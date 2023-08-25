@@ -53,6 +53,8 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
                                      .a = layer["a"].as<double>()});
     }
     external_field_potential = countExternalField(layers, start_r, end_r, h);
+    // std::cout << "external field max: " << external_field_potential({0, 0, 10000}) << '\n';
+    // external_field_potential = constExternalField(2500.0);
 
     seed = config["seed"].as<int>();
     degree_probability_growth = config["degree_probability_growth"].as<double>();
@@ -149,7 +151,7 @@ void LightningTree::NextIter() {
     int grow_iter_period = grow_time_period / delta_t;
     if (iter_number % grow_iter_period == 0) {
         Grow();
-        //Delete();
+        Delete();
     }
 }
 
@@ -158,20 +160,21 @@ double LightningTree::Potential(const std::array<double, 3>& coords) {
     for (auto& vertex : vertices) {
         double l = countDistance(vertex.coords, coords);
         double mirror_l = countDistance(vertex.coords, {coords[0], coords[1], -coords[2]});
+        double k = 1 / (4 * std::numbers::pi * epsilon_0);
         if (l < kEps) {
             if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
                 LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
             }
             Phi +=
-                vertex.q / (4 * std::numbers::pi * epsilon_0) * (1 / (h + r) - 1 / (mirror_l + r)) +
-                vertex.Q / (4 * std::numbers::pi * epsilon_0) * (1 / (h + R) - 1 / (mirror_l + R));
+                vertex.q * k * (1 / (h/2 + r) - 1 / (mirror_l + r)) +
+                vertex.Q * k * (1 / (h/2 + R) - 1 / (mirror_l + R));
         } else {
             if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
                 LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
             }
             Phi +=
-                vertex.q / (4 * std::numbers::pi * epsilon_0) * (1 / (l + r) - 1 / (mirror_l + r)) +
-                vertex.Q / (4 * std::numbers::pi * epsilon_0) * (1 / (l + R) - 1 / (mirror_l + R));
+                vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
+                vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
         }
     }
     return Phi;
@@ -194,13 +197,14 @@ double LightningTree::CountElectricity(const Vertex& vertex_from, const Vertex& 
         throw std::runtime_error{"Electric field along edge is inf or nan!"};
     }
 
-    return (phi_from - phi_to) / l;
+    return -(phi_from - phi_to) / l;
 }
 
 void LightningTree::CountSigma() {
     for (auto& edge : edges) {
         double E = CountElectricity(vertices[edge.from], vertices[edge.to]);
-        edge.sigma = edge.sigma * std::exp((alpha * E * E - beta) * delta_t);
+        //std::cout << E << "\n";
+        edge.sigma *= std::exp((alpha * E * E - beta) * delta_t);
 
         if (!checkDouble(sigma)) {
             LOG(INFO) << "Incorrect sigma value " << sigma;
@@ -233,12 +237,12 @@ std::array<int, 3> LightningTree::countInternalCoords(size_t vertex_id,
             vertices[vertex_id].internal_coords[2] + (dir[2] - 1)};
 }
 
-double LightningTree::countDistance(const std::array<double, 3>& r_point,
-                                    const std::array<double, 3>& l_point) const {
-    return std::abs(std::sqrt(std::pow((r_point[0] - l_point[0]), 2) +
-                              std::pow((r_point[1] - l_point[1]), 2) +
-                              std::pow((r_point[2] - l_point[2]), 2)));
-}
+// double LightningTree::countDistance(const std::array<double, 3>& r_point,
+//                                     const std::array<double, 3>& l_point) const {
+//     return std::abs(std::sqrt(std::pow((r_point[0] - l_point[0]), 2) +
+//                               std::pow((r_point[1] - l_point[1]), 2) +
+//                               std::pow((r_point[2] - l_point[2]), 2)));
+// }
 
 LightningTree::cubic_grid LightningTree::CreateEmptyNode() {
     cubic_grid node;
@@ -250,6 +254,7 @@ LightningTree::cubic_grid LightningTree::CreateEmptyNode() {
             }
         }
     }
+    node[1][1][1] = 0;
     return node;
 }
 
