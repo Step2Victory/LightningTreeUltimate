@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import plotly.io as pio
 import pandas as pd
-import math, io
+import math, io, yaml
 # import time, multiprocessing as mps
 
 from plotly.subplots import make_subplots
@@ -10,10 +10,10 @@ from PIL import Image
 import os
 import subprocess
 import flask
-import time
 
 server = flask.Flask(__name__)
 
+h_range = [4000, 12000]
 eps0 = 8.85418781281313131313e-12
 k = 1 / (4 * math.pi * eps0)
 dimension = {'sum Q + q':'Кл', 'avg I':'А', 'avg Sigma':'См', 'sum Phi':'В', 'full Phi':'В'}
@@ -153,13 +153,16 @@ class LightningTree(object):
         # else:
         try:
             result = pd.read_csv(filename, delim_whitespace=True)
-        except : #pd.errors.EmptyDataError or FileNotFoundError:
+        except pd.errors.EmptyDataError:
             if 'vertex_table' in filename:
                 result = pd.DataFrame([[1, 0, 0, 0, 0, 9000, 618974], [2,  0, 0, 0, 0, 9100, 1.99509e+07]], columns=["id", 'q', 'Q', 'x', 'y', 'z', "phi"])
             elif 'edge_table' in filename:
                 result = pd.DataFrame([[1, 1, 2, 0.00060733, 1e-05]], columns=["id", "from", "to", "current", "sigma"])
             elif 'phi_info' in filename:
                 result = pd.DataFrame([[7000, -5.80393e+07, -5.80393e+07], [7100, -6.5424e+07, -6.5424e+07]], columns=["z", "full_phi", "ext_phi"])
+        except FileNotFoundError:
+            pass
+
         return result
 
 
@@ -227,7 +230,7 @@ class LightningTree(object):
         return: Графический объект
         """
         fig = go.Figure(go.Scatter(x=df[df.columns[1]], y=df[df.columns[0]], mode='lines+markers'),
-                        layout=dict(uirevision=True, yaxis={'range':[7000,11000]}, xaxis={'title':_name + ', ' + dimension[_name]}))
+                        layout=dict(uirevision=True, yaxis={'range':h_range}, xaxis={'title':_name + ', ' + dimension[_name]}))
         return fig
 
 
@@ -273,8 +276,8 @@ class LightningTree(object):
         # Настройки для отображения графиков
         scale_nodes = [(0, "darkblue"), (0.15, "blue"), (0.49, "yellow"), (0.5, "gray"), (0.51, "yellow"), (0.85, "red"), (1, "darkred")] # цветовая шкала для зарядов
         scale_case = [(0, "darkblue"), (0.15, "blue"), (0.49, "yellow"), (0.5, "white"), (0.51, "yellow"), (0.85, "red"), (1, "darkred")] # цветовая шкала для чехлов
-        setting = {'showbackground': False, 'showticklabels': True, 'showgrid': False, 'zeroline': True, 'range':[-1000, 1000]} # Параметры отображения системы координат
-        setting_z = {'showbackground': True, 'showticklabels': True, 'showgrid': True, 'zeroline': True, 'range':[7000,11000]} # Параметры отображения системы координат для оси z
+        setting = {'showbackground': False, 'showticklabels': True, 'showgrid': False, 'zeroline': True, 'range':[-2000, 2000]} # Параметры отображения системы координат
+        setting_z = {'showbackground': True, 'showticklabels': True, 'showgrid': True, 'zeroline': True, 'range':h_range} # Параметры отображения системы координат для оси z
 
         # Создание настройки отображения графического объекта graph_object
         layout = go.Layout(showlegend=False, hovermode='closest',
@@ -301,13 +304,13 @@ class LightningTree(object):
         # Построение зарядов    
         node_trace = go.Scatter3d(x=self.df_vertex.x, y=self.df_vertex.y, z=self.df_vertex.z,
                                   mode='markers',
-                                  marker=dict(showscale=True, colorscale=scale_nodes, color=self.df_vertex.q, cmin=-0.001, cmax=0.001, size=2.4),
+                                  marker=dict(showscale=True, colorscale=scale_nodes, color=self.df_vertex.q, size=2.4),#, cmin=-0.001, cmax=0.001, ),
                                   line_width=.1)
 
         # Построение чехлов
         case_trace = go.Scatter3d(x=self.df_vertex.x, y=self.df_vertex.y, z=self.df_vertex.z,
                                   mode='markers',
-                                  marker=dict(showscale=False, colorscale=scale_case, color=self.df_vertex.Q, cmin=-0.1, cmax=0.1, size=12),
+                                  marker=dict(showscale=False, colorscale=scale_case, color=self.df_vertex.Q, size=12),#, cmin=-0.1, cmax=0.1),
                                   text = self.df_vertex.q,
                                   customdata= self.df_vertex.Q,
                                   hovertemplate='q= %{text} <br>Q= %{customdata}<extra></extra>',
@@ -469,6 +472,9 @@ def update_plots(n, t):
 def action_process(start_clicks, pause_clicks, stop_clicks, export_clicks, disabled):
     if ctx.triggered_id == 'start_button':
         if disabled:
+            # lt_history = [LightningTree(folder)]
+            # lt_history[0].plot_tree()
+            # lt_history[0].plots()
             start_subprocess()
             return (False, # включение обновления по интервалу времени
                     False) # включение слайдера

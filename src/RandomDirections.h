@@ -8,20 +8,16 @@ std::uniform_real_distribution<> dis(0, 26);
 
 std::vector<std::array<int, 3>> randomDirections()
 {
-    std::array<std::array<std::array<bool, 3>, 3>, 3> used = {{{false}}};
+    std::array<std::array<std::array<bool, 3>, 3>, 3> used;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            for (int k = 0; k < 3; k++) {
+                used[i][j][k] = false;
+            }
+        }
+    }
     std::vector<std::array<int, 3>> directions;
     int counter = 26;
-
-    // for (size_t i = 0; i < 3; ++i)
-    // {
-    //     for (size_t j = 0; j < 3; ++j)
-    //     {
-    //         for (size_t k = 0; k < 3; ++k)
-    //         {
-    //             used[i][j][k] = false;
-    //         }
-    //     }
-    // }
 
     while (counter)
     {

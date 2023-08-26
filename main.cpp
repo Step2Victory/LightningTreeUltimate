@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
     // Initialize Google’s logging library.
     auto t = std::chrono::system_clock::now();
     google::InitGoogleLogging(argv[0]);
-    google::SetLogDestination(google::GLOG_INFO,".././logs/INFO_");
+    google::SetLogDestination(google::GLOG_INFO,"./logs/INFO_");
 
     auto project_path = std::filesystem::current_path();//.parent_path();
     //auto project_path = ""

@@ -22,7 +22,7 @@ public:
                   double Q_minus_s, double resistance, double E_plus,
                   double E_minus, double alpha, double beta,
                   double sigma, std::array<double, 3> start_r, std::array<double, 3> end_r,
-                  double degree_probability_growth, int seed);
+                  double degree_probability_growth, int seed, int max_number_edges);
     void NextIter();
     void CountSigma();
     double Potential(const std::array<double, 3>&);
@@ -32,7 +32,7 @@ public:
     std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
     std::array<int, 3> countInternalCoords(size_t, const std::array<int, 3>&);
 
-    double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
+    // double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
     cubic_grid CreateNode(size_t, const std::array<int, 3>&);
     cubic_grid CreateEmptyNode();
     size_t addVertex(Vertex);
@@ -120,6 +120,7 @@ private:
     size_t iter_number;
 
     int seed;
+    int max_number_edges;
     mutable std::mt19937 gen;
     mutable std::uniform_real_distribution<> dis;
 };

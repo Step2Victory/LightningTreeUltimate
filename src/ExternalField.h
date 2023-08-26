@@ -14,33 +14,50 @@ struct ChargeLayer {
     double L;
     std::array<double, 3> r;
     double a;
+
+    // friend std::ostream& operator<< (std::ostream &out, const ChargeLayer &layer)
+    // {
+    //     out << "[p_0 = " << layer.p_0 
+    //         << ", h = " << layer.h 
+    //         << ", L = " << layer.L 
+    //         << ", r = {" << layer.r[0] 
+    //             << ", " << layer.r[1] 
+    //             << ", " << layer.r[2] 
+    //         << "}, a = " << layer.a
+    //         << ']';
+     
+    //     return out; 
+    // }
 };
+
+double countDistance(const std::array<double, 3>& r_point,
+                                    const std::array<double, 3>& l_point) 
+{
+    return std::abs(std::sqrt(std::pow((r_point[0] - l_point[0]), 2) +
+                              std::pow((r_point[1] - l_point[1]), 2) +
+                              std::pow((r_point[2] - l_point[2]), 2)));
+}
 
 double Potential(const std::array<double, 3>& point,
                  const std::vector<std::vector<std::vector<double>>>& q_values,
-                 const std::array<double, 3>& start, double h) {
+                 const std::array<double, 3>& start, double h) 
+{
     double result = 0;
+    double k = 1 / (4 * std::numbers::pi * epsilon_0);
     for (int i = 0; i < q_values.size(); i++) {
         for (int j = 0; j < q_values[0].size(); j++) {
             for (int k = 0; k < q_values[0][0].size(); k++) {
                 std::array<double, 3> r = {start[0] + h * i, start[1] + h * j,
                                            start[2] + h * k};
 
-                double l = std::abs(std::sqrt(std::pow((r[0] - point[0]), 2) +
-                                              std::pow((r[1] - point[1]), 2) +
-                                              std::pow((r[2] - point[2]), 2)));
-                double mirror_l =
-                    std::abs(std::sqrt(std::pow((r[0] - point[0]), 2) +
-                                       std::pow((r[1] - point[1]), 2) +
-                                       std::pow((r[2] + point[2]), 2)));
+                double l = countDistance(r, point);
+                double mirror_l = countDistance(r, {point[0], point[1], -point[2]});
 
                 if (l < kEps) {
-                    result += q_values[i][j][k] /
-                              (4 * std::numbers::pi * epsilon_0) *
+                    result += q_values[i][j][k] * k *
                               (1 / h - 1 / mirror_l);
                 } else {
-                    result += q_values[i][j][k] /
-                          (4 * std::numbers::pi * epsilon_0) *
+                    result += q_values[i][j][k] * k *
                           (1 / l - 1 / mirror_l);
                 }
             }
@@ -50,7 +67,8 @@ double Potential(const std::array<double, 3>& point,
 }
 
 std::function<double(const std::array<double, 3>&)> constExternalField(
-    double external_field) {
+    double external_field) 
+{
     std::function<double(const std::array<double, 3>&)> result =
         [external_field =
              std::move(external_field)](const std::array<double, 3>& coords) {
@@ -61,7 +79,8 @@ std::function<double(const std::array<double, 3>&)> constExternalField(
 
 std::function<double(const std::array<double, 3>&)> countExternalField(
     const std::vector<ChargeLayer>& layers, const std::array<double, 3>& start,
-    const std::array<double, 3>& end, double h) {
+    const std::array<double, 3>& end, double h) 
+{
     std::vector<std::vector<std::vector<double>>> q_values(
         (end[0] - start[0]) / h,
         std::vector<std::vector<double>>(
@@ -88,6 +107,7 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
                                      layer.L,
                                  2 * layer.a);
                     q += layer.p_0 * std::exp(expr) * h * h * h;
+                    // std::cout << "q = " << q << ", exp(expr) = " << std::exp(expr) << '\n';
                 }
                 q_values[i][j][k] = q;
             }
@@ -106,7 +126,8 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
 
     std::function<double(const std::array<double, 3>&)> result =
         [potential_values = std::move(potential_values), r = std::move(start),
-         h = std::move(h)](const std::array<double, 3>& coords) {
+         h = std::move(h)](const std::array<double, 3>& coords) 
+        {
             std::array<int, 3> shift = {
                 static_cast<int>((coords[0] - r[0]) / h),
                 static_cast<int>((coords[1] - r[1]) / h),
