@@ -22,7 +22,7 @@ public:
                   double Q_minus_s, double resistance, double E_plus,
                   double E_minus, double alpha, double beta,
                   double sigma, std::array<double, 3> start_r, std::array<double, 3> end_r,
-                  double degree_probability_growth, int seed);
+                  double degree_probability_growth, int seed, int max_number_edges);
     void NextIter();
     void CountSigma();
     double Potential(const std::array<double, 3>&);
@@ -120,6 +120,7 @@ private:
     size_t iter_number;
 
     int seed;
+    int max_number_edges;
     mutable std::mt19937 gen;
     mutable std::uniform_real_distribution<> dis;
 };

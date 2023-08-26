@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import plotly.io as pio
 import pandas as pd
-import math, io
+import math, io, yaml
 # import time, multiprocessing as mps
 
 from plotly.subplots import make_subplots
@@ -10,7 +10,6 @@ from PIL import Image
 import os
 import subprocess
 import flask
-import time
 
 server = flask.Flask(__name__)
 
@@ -154,13 +153,16 @@ class LightningTree(object):
         # else:
         try:
             result = pd.read_csv(filename, delim_whitespace=True)
-        except : #pd.errors.EmptyDataError or FileNotFoundError:
+        except pd.errors.EmptyDataError:
             if 'vertex_table' in filename:
                 result = pd.DataFrame([[1, 0, 0, 0, 0, 9000, 618974], [2,  0, 0, 0, 0, 9100, 1.99509e+07]], columns=["id", 'q', 'Q', 'x', 'y', 'z', "phi"])
             elif 'edge_table' in filename:
                 result = pd.DataFrame([[1, 1, 2, 0.00060733, 1e-05]], columns=["id", "from", "to", "current", "sigma"])
             elif 'phi_info' in filename:
                 result = pd.DataFrame([[7000, -5.80393e+07, -5.80393e+07], [7100, -6.5424e+07, -6.5424e+07]], columns=["z", "full_phi", "ext_phi"])
+        except FileNotFoundError:
+            pass
+
         return result
 
 
@@ -274,7 +276,7 @@ class LightningTree(object):
         # Настройки для отображения графиков
         scale_nodes = [(0, "darkblue"), (0.15, "blue"), (0.49, "yellow"), (0.5, "gray"), (0.51, "yellow"), (0.85, "red"), (1, "darkred")] # цветовая шкала для зарядов
         scale_case = [(0, "darkblue"), (0.15, "blue"), (0.49, "yellow"), (0.5, "white"), (0.51, "yellow"), (0.85, "red"), (1, "darkred")] # цветовая шкала для чехлов
-        setting = {'showbackground': False, 'showticklabels': True, 'showgrid': False, 'zeroline': True, 'range':[-1000, 1000]} # Параметры отображения системы координат
+        setting = {'showbackground': False, 'showticklabels': True, 'showgrid': False, 'zeroline': True, 'range':[-2000, 2000]} # Параметры отображения системы координат
         setting_z = {'showbackground': True, 'showticklabels': True, 'showgrid': True, 'zeroline': True, 'range':h_range} # Параметры отображения системы координат для оси z
 
         # Создание настройки отображения графического объекта graph_object

@@ -53,14 +53,16 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
                                      .a = layer["a"].as<double>()});
     }
     external_field_potential = countExternalField(layers, start_r, end_r, h);
+    // external_field_potential = constExternalField(6000.0);
+
     // std::cout << "external field max: " << external_field_potential({0, 0, 10000}) << '\n';
-    // external_field_potential = constExternalField(2500.0);
 
     seed = config["seed"].as<int>();
     degree_probability_growth = config["degree_probability_growth"].as<double>();
     gen = std::mt19937(seed);
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
+    max_number_edges = config["max_number_edges"].as<int>();
     auto first = addVertex(Vertex{.q = 0,
                               .Q = 0,
                               .Phi = 0,
@@ -85,7 +87,7 @@ LightningTree::LightningTree(double h, double delta_t, double r, double R, size_
                              double Q_minus_s, double resistance, double E_plus, double E_minus,
                              double alpha, double beta, double sigma, std::array<double, 3> start_r,
                              std::array<double, 3> end_r, double degree_probability_growth,
-                             int seed)
+                             int seed, int max_number_edges)
     : h(h),
       delta_t(delta_t),
       r(r),
@@ -118,7 +120,8 @@ LightningTree::LightningTree(double h, double delta_t, double r, double R, size_
       ),
     //   external_field_potential(constExternalField(100000.0)),
       degree_probability_growth(degree_probability_growth),
-      seed(seed) {
+      seed(seed),
+      max_number_edges(max_number_edges) {
     gen = std::mt19937(seed);
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
@@ -291,11 +294,12 @@ void LightningTree::Grow() {
     int number_of_vertices_before_grow = graph.size();
     for (size_t v_from_id = number_of_vertices_before_grow; v_from_id-- > 0;) {
         //std::cout << v_from_id << "\t" << vertices_activity.size() << std::endl;
-        if (!vertices_activity[v_from_id])
+        if (!vertices_activity[v_from_id] || vertices[v_from_id].number_edges >= max_number_edges)
             continue;
         bool notGrow = true;
         auto directions = randomDirections();
         for (auto dir : directions) {
+            if (vertices[v_from_id].number_edges >= max_number_edges) break;
             int i = dir[0];
             int j = dir[1];
             int k = dir[2];
@@ -319,6 +323,7 @@ void LightningTree::Grow() {
                     .Phi = Potential(coords),
                     .coords = coords,
                     .internal_coords = internal_coords,
+                    .number_edges = 0,
                     .growless_iter_number = 0
                 };
             }
@@ -327,10 +332,13 @@ void LightningTree::Grow() {
             }
             bool criterion_value = GrowthCriterion(vertices[v_from_id], vertex);
             if (criterion_value) {
+                vertices[v_from_id].number_edges++;
                 if (!v_to_id.has_value()) {
                     v_to_id = addVertex(vertex);
                 } else {
+                    vertices[*v_to_id].number_edges++;
                     vertices_activity[*v_to_id] = true;
+
                 }
             
                 if (e_id == -1) {
@@ -349,6 +357,7 @@ void LightningTree::Grow() {
 }
 
 size_t LightningTree::addVertex(Vertex vertex) {
+    vertex.number_edges++;
     vertices.push_back(vertex);
     internal_coords_to_id[vertex.internal_coords] = vertices.size() - 1;
     vertices_activity.push_back(true);
@@ -394,12 +403,12 @@ void LightningTree::Delete() {
                         if (vertices[edges[e_id].from].number_edges == 0) {
                             vertices_activity[edges[e_id].from] = false;
                         }
-                        if (vertices[edges[e_id].to].number_edges == 1) {
-                            vertices_peripherality[edges[e_id].to] = true;
-                        }
-                        if (vertices[edges[e_id].to].number_edges == 0) {
-                            vertices_activity[edges[e_id].to] = false;
-                        }
+                        // if (vertices[edges[e_id].to].number_edges == 1) {
+                        //     vertices_peripherality[edges[e_id].to] = true;
+                        // }
+                        // if (vertices[edges[e_id].to].number_edges == 0) {
+                        //     vertices_activity[edges[e_id].to] = false;
+                        // }
                         
                     }
                 }

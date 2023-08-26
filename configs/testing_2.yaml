@@ -14,6 +14,7 @@ alpha: 5e-8
 beta: 10
 sigma: 1e-5
 seed: 42
+max_number_edges: 3
 
 start_x: -500
 start_y: -500
@@ -37,7 +38,7 @@ external_field_layers:
     L: 3000
     r: [0, 0, 6500]
     a: 4
-  - p_0 : 0.86
+  - p_0 : 0.97
     h: 700
     L: 1800
     r: [0, 0, 4700]
