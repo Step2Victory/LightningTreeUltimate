@@ -7,20 +7,17 @@
 #include <unordered_map>
 #include <map>
 
-
 class LightningTree {
     struct Vertex;
+
 private:
-    using cubic_grid =
-        std::array<std::array<std::array<int, 3>, 3>, 3>;
+    using cubic_grid = std::array<std::array<std::array<int, 3>, 3>, 3>;
 
 public:
     LightningTree(const std::filesystem::path& path_to_config_file);
-    LightningTree(double h, double delta_t, double r, double R,
-                  size_t periphery_size, double q_plus_max,
-                  double q_minus_max, double Q_plus_s,
-                  double Q_minus_s, double resistance, double E_plus,
-                  double E_minus, double alpha, double beta,
+    LightningTree(double h, double delta_t, double r, double R, size_t periphery_size,
+                  double q_plus_max, double q_minus_max, double Q_plus_s, double Q_minus_s,
+                  double resistance, double E_plus, double E_minus, double alpha, double beta,
                   double sigma, std::array<double, 3> start_r, std::array<double, 3> end_r,
                   double degree_probability_growth, int seed, int max_number_edges);
     void NextIter();
@@ -49,13 +46,13 @@ public:
     void Info() const;
     void WriteResponse(int response) const;
     void ReturnFiles(const std::filesystem::path&);
-    void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&, const std::array<double, 3>&);
+    void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&,
+                   const std::array<double, 3>&);
 
     std::array<double, 3> start_r;
     std::array<double, 3> end_r;
 
 private:
-
     bool TryAddEdge(size_t v_from_id, const std::array<int, 3>& dir);
 
     struct Vertex {
@@ -91,8 +88,7 @@ private:
     double sigma;
     double degree_probability_growth;
     size_t periphery_size;
-    std::function<double(const std::array<double, 3>&)>
-        external_field_potential;
+    std::function<double(const std::array<double, 3>&)> external_field_potential;
 
     std::vector<Vertex> vertices;
     std::vector<bool> vertices_peripherality;
@@ -100,7 +96,7 @@ private:
     std::vector<Edge> edges;
     std::vector<bool> edges_activity;
 
-    //здесь индексы в массиве ребер
+    // здесь индексы в массиве ребер
 
     std::vector<cubic_grid> graph;
 
@@ -116,7 +112,7 @@ private:
         }
     };
 
-    std::map<std::array<int, 3>, int, Less> internal_coords_to_id; 
+    std::map<std::array<int, 3>, int, Less> internal_coords_to_id;
     size_t iter_number;
 
     int seed;
