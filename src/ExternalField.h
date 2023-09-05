@@ -109,7 +109,8 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
     }
 
     std::function<double(const std::array<double, 3>&)> result =
-        [=, r = start](const std::array<double, 3>& coords) {
+        [potential_values = std::move(potential_values), r = start,
+         h](const std::array<double, 3>& coords) {
             std::array<int, 3> shift = {static_cast<int>((coords[0] - r[0]) / h),
                                         static_cast<int>((coords[1] - r[1]) / h),
                                         static_cast<int>((coords[2] - r[2]) / h)};
