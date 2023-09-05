@@ -63,22 +63,24 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
     max_number_edges = config["max_number_edges"].as<int>();
-    auto first = addVertex(Vertex{.q = 0,
-                              .Q = 0,
-                              .Phi = 0,
-                              .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
-                                         (end_r[2] + start_r[2]) / 2 - h},
-                              .internal_coords = {0, 0, 0},
-                              .number_edges = 0,
-                              .growless_iter_number = 0});
-    auto second = addVertex(Vertex{.q = 0,
-                              .Q = 0,
-                              .Phi = 0,
-                              .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
-                                         (end_r[2] + start_r[2]) / 2},
-                              .internal_coords = {0, 0, 1},
-                              .number_edges = 0,
-                              .growless_iter_number = 0});
+    auto first =
+        addVertex(Vertex{.q = 0,
+                         .Q = 0,
+                         .Phi = 0,
+                         .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
+                                    (end_r[2] + start_r[2]) / 2 - h},
+                         .internal_coords = {0, 0, 0},
+                         .number_edges = 0,
+                         .growless_iter_number = 0});
+    auto second =
+        addVertex(Vertex{.q = 0,
+                         .Q = 0,
+                         .Phi = 0,
+                         .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
+                                    (end_r[2] + start_r[2]) / 2},
+                         .internal_coords = {0, 0, 1},
+                         .number_edges = 0,
+                         .growless_iter_number = 0});
     addEdge(first, second);
 }
 
@@ -106,41 +108,38 @@ LightningTree::LightningTree(double h, double delta_t, double r, double R, size_
       start_r(start_r),
       end_r(end_r),
       external_field_potential(countExternalField(
-        std::vector({
-            ChargeLayer{.p_0 = -0.0000007, .h = h, .L = 200, .r =
-            start_r, .a = 1}, 
-            ChargeLayer{.p_0 = 0.0000007, .h = h, .L = 200, .r = 
-            end_r, .a = 1}}
-            ),
-        std::array<double, 3>{end_r[0] - start_r[0] - 5 * h,
-        end_r[1] - start_r[1] - 5 * h, end_r[2] - start_r[2] - 20
-        * h}, std::array<double, 3>{end_r[0] - start_r[0] + 5 *
-        h, end_r[1] - start_r[1] + 5 * h, end_r[2] - start_r[2] +
-        20 * h}, h)
-      ),
-    //   external_field_potential(constExternalField(100000.0)),
+          std::vector({ChargeLayer{.p_0 = -0.0000007, .h = h, .L = 200, .r = start_r, .a = 1},
+                       ChargeLayer{.p_0 = 0.0000007, .h = h, .L = 200, .r = end_r, .a = 1}}),
+          std::array<double, 3>{end_r[0] - start_r[0] - 5 * h, end_r[1] - start_r[1] - 5 * h,
+                                end_r[2] - start_r[2] - 20 * h},
+          std::array<double, 3>{end_r[0] - start_r[0] + 5 * h, end_r[1] - start_r[1] + 5 * h,
+                                end_r[2] - start_r[2] + 20 * h},
+          h)),
+      //   external_field_potential(constExternalField(100000.0)),
       degree_probability_growth(degree_probability_growth),
       seed(seed),
       max_number_edges(max_number_edges) {
     gen = std::mt19937(seed);
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
-    auto first = addVertex(Vertex{.q = 0,
-                              .Q = 0,
-                              .Phi = 0,
-                              .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
-                                         (end_r[2] + start_r[2]) / 2 - h},
-                              .internal_coords = {0, 0, 0},
-                              .number_edges = 0,
-                              .growless_iter_number = 0});
-    auto second = addVertex(Vertex{.q = 0,
-                              .Q = 0,
-                              .Phi = 0,
-                              .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
-                                         (end_r[2] + start_r[2]) / 2},
-                              .internal_coords = {0, 0, 1},
-                              .number_edges = 0,
-                              .growless_iter_number = 0});
+    auto first =
+        addVertex(Vertex{.q = 0,
+                         .Q = 0,
+                         .Phi = 0,
+                         .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
+                                    (end_r[2] + start_r[2]) / 2 - h},
+                         .internal_coords = {0, 0, 0},
+                         .number_edges = 0,
+                         .growless_iter_number = 0});
+    auto second =
+        addVertex(Vertex{.q = 0,
+                         .Q = 0,
+                         .Phi = 0,
+                         .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
+                                    (end_r[2] + start_r[2]) / 2},
+                         .internal_coords = {0, 0, 1},
+                         .number_edges = 0,
+                         .growless_iter_number = 0});
     addEdge(first, second);
 }
 
@@ -168,16 +167,14 @@ double LightningTree::Potential(const std::array<double, 3>& coords) {
             if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
                 LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
             }
-            Phi +=
-                vertex.q * k * (1 / (h/2 + r) - 1 / (mirror_l + r)) +
-                vertex.Q * k * (1 / (h/2 + R) - 1 / (mirror_l + R));
+            Phi += vertex.q * k * (1 / (h / 2 + r) - 1 / (mirror_l + r)) +
+                   vertex.Q * k * (1 / (h / 2 + R) - 1 / (mirror_l + R));
         } else {
             if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
                 LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
             }
-            Phi +=
-                vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
-                vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
+            Phi += vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
+                   vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
         }
     }
     return Phi;
@@ -195,8 +192,10 @@ double LightningTree::CountElectricity(const Vertex& vertex_from, const Vertex& 
     double phi_to = vertex_to.Phi;
 
     if (!checkDouble(phi_from - phi_to) / l) {
-        LOG(INFO) << "Electric field in from " << ": " << phi_from << ". "
-                  << "Electric field in to" << ": " << phi_to;
+        LOG(INFO) << "Electric field in from "
+                  << ": " << phi_from << ". "
+                  << "Electric field in to"
+                  << ": " << phi_to;
         throw std::runtime_error{"Electric field along edge is inf or nan!"};
     }
 
@@ -206,7 +205,7 @@ double LightningTree::CountElectricity(const Vertex& vertex_from, const Vertex& 
 void LightningTree::CountSigma() {
     for (auto& edge : edges) {
         double E = CountElectricity(vertices[edge.from], vertices[edge.to]);
-        //std::cout << E << "\n";
+        // std::cout << E << "\n";
         edge.sigma *= std::exp((alpha * E * E - beta) * delta_t);
 
         if (!checkDouble(sigma)) {
@@ -218,7 +217,8 @@ void LightningTree::CountSigma() {
 
 void LightningTree::CountCurrent() {
     for (auto& edge : edges) {
-        edge.current = std::numbers::pi * r * r * edge.sigma * CountElectricity(vertices[edge.from], vertices[edge.to]);
+        edge.current = std::numbers::pi * r * r * edge.sigma *
+                       CountElectricity(vertices[edge.from], vertices[edge.to]);
         if (!checkDouble(edge.current)) {
             LOG(INFO) << "Error in current " << edge.current;
             throw std::runtime_error{"bad current"};
@@ -293,13 +293,14 @@ void LightningTree::Grow() {
     std::vector<cubic_grid> temp_graph;
     int number_of_vertices_before_grow = graph.size();
     for (size_t v_from_id = number_of_vertices_before_grow; v_from_id-- > 0;) {
-        //std::cout << v_from_id << "\t" << vertices_activity.size() << std::endl;
+        // std::cout << v_from_id << "\t" << vertices_activity.size() << std::endl;
         if (!vertices_activity[v_from_id] || vertices[v_from_id].number_edges >= max_number_edges)
             continue;
         bool notGrow = true;
         auto directions = randomDirections();
         for (auto dir : directions) {
-            if (vertices[v_from_id].number_edges >= max_number_edges) break;
+            if (vertices[v_from_id].number_edges >= max_number_edges)
+                break;
             int i = dir[0];
             int j = dir[1];
             int k = dir[2];
@@ -307,25 +308,23 @@ void LightningTree::Grow() {
 
             if ((i == 1 && j == 1 && k == 1) || (e_id != -1 && edges_activity[e_id]))
                 continue;
-            
+
             auto internal_coords = countInternalCoords(v_from_id, dir);
             auto coords = countCoords(v_from_id, dir);
             std::optional<size_t> v_to_id;
             Vertex vertex;
-            
+
             if (internal_coords_to_id.contains(internal_coords)) {
                 v_to_id = internal_coords_to_id[internal_coords];
                 vertex = vertices[*v_to_id];
             } else {
-                vertex = Vertex{
-                    .q = 0,
-                    .Q = 0,
-                    .Phi = Potential(coords),
-                    .coords = coords,
-                    .internal_coords = internal_coords,
-                    .number_edges = 0,
-                    .growless_iter_number = 0
-                };
+                vertex = Vertex{.q = 0,
+                                .Q = 0,
+                                .Phi = Potential(coords),
+                                .coords = coords,
+                                .internal_coords = internal_coords,
+                                .number_edges = 0,
+                                .growless_iter_number = 0};
             }
             if (v_to_id.has_value() && vertices_activity[*v_to_id]) {
                 continue;
@@ -338,9 +337,8 @@ void LightningTree::Grow() {
                 } else {
                     vertices[*v_to_id].number_edges++;
                     vertices_activity[*v_to_id] = true;
-
                 }
-            
+
                 if (e_id == -1) {
                     addEdge(v_from_id, *v_to_id);
                 } else {
@@ -372,8 +370,7 @@ size_t LightningTree::addEdge(size_t from, size_t to) {
     std::array<int, 3> dir = {
         1 + (vertices[to].internal_coords[0] - vertices[from].internal_coords[0]),
         1 + (vertices[to].internal_coords[1] - vertices[from].internal_coords[1]),
-        1 + (vertices[to].internal_coords[2] - vertices[from].internal_coords[2])
-    };
+        1 + (vertices[to].internal_coords[2] - vertices[from].internal_coords[2])};
     graph[from][dir[0]][dir[1]][dir[2]] = edges.size() - 1;
     graph[to][2 - dir[0]][2 - dir[1]][2 - dir[2]] = edges.size() - 1;
     return edges.size() - 1;
@@ -409,7 +406,6 @@ void LightningTree::Delete() {
                         // if (vertices[edges[e_id].to].number_edges == 0) {
                         //     vertices_activity[edges[e_id].to] = false;
                         // }
-                        
                     }
                 }
             }
@@ -502,8 +498,7 @@ void LightningTree::ReturnPhi(const std::filesystem::path& path_to_data,
         double ext_sum = 0;
         for (double x = start_r[0]; x < end_r[0]; x += h) {
             for (double y = start_r[1]; y < end_r[1]; y += h) {
-                full_sum += Potential({x, y, z}) +
-                            external_field_potential({x, y, z});
+                full_sum += Potential({x, y, z}) + external_field_potential({x, y, z});
                 ext_sum += external_field_potential({x, y, z});
             }
         }
