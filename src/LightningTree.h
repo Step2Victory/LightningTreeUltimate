@@ -46,12 +46,10 @@ public:
     void Info() const;
     void WriteResponse(int response) const;
     void ReturnFiles(const std::filesystem::path&);
-    void ReturnPhi(const std::filesystem::path&, const std::array<double, 3>&,
-                   const std::array<double, 3>&);
+    void ReturnPhi(const std::filesystem::path&);
 
-    std::array<double, 3> start_r;
-    std::array<double, 3> end_r;
 
+    
 private:
     bool TryAddEdge(size_t v_from_id, const std::array<int, 3>& dir);
 
@@ -71,7 +69,8 @@ private:
         double current;
         double sigma;
     };
-
+    std::array<double, 3> start_r;
+    std::array<double, 3> end_r;
     double h;
     double delta_t;
     double r;

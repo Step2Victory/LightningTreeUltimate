@@ -84,29 +84,31 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
     addEdge(first, second);
 }
 
-LightningTree::LightningTree(double h, double delta_t, double r, double R, size_t periphery_size,
-                             double q_plus_max, double q_minus_max, double Q_plus_s,
-                             double Q_minus_s, double resistance, double E_plus, double E_minus,
-                             double alpha, double beta, double sigma, std::array<double, 3> start_r,
-                             std::array<double, 3> end_r, double degree_probability_growth,
-                             int seed, int max_number_edges)
-    : h(h),
-      delta_t(delta_t),
-      r(r),
-      R(R),
-      periphery_size(periphery_size),
-      q_plus_max(q_plus_max),
-      q_minus_max(q_minus_max),
-      Q_plus_s(Q_plus_s),
-      Q_minus_s(Q_minus_s),
-      resistance(resistance),
-      E_plus(E_plus),
-      E_minus(E_minus),
-      alpha(alpha),
-      beta(beta),
-      sigma(sigma),
-      start_r(start_r),
-      end_r(end_r),
+LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, size_t periphery_size_,
+                             double q_plus_max_, double q_minus_max_, double Q_plus_s_,
+                             double Q_minus_s_, double resistance_, double E_plus_, double E_minus_,
+                             double alpha_, double beta_, double sigma_, std::array<double, 3> start_r_,
+                             std::array<double, 3> end_r_, double degree_probability_growth_,
+                             int seed_, int max_number_edges_)
+    : start_r(start_r_),
+      end_r(end_r_),
+      h(h_),
+      delta_t(delta_t_),
+      r(r_),
+      R(R_),
+      q_plus_max(q_plus_max_),
+      q_minus_max(q_minus_max_),
+      Q_plus_s(Q_plus_s_),
+      Q_minus_s(Q_minus_s_),
+      resistance(resistance_),
+      E_plus(E_plus_),
+      E_minus(E_minus_),
+      alpha(alpha_),
+      beta(beta_),
+      sigma(sigma_),
+      //   external_field_potential(constExternalField(100000.0)),
+      degree_probability_growth(degree_probability_growth_),
+      periphery_size(periphery_size_),
       external_field_potential(countExternalField(
           std::vector({ChargeLayer{.p_0 = -0.0000007, .h = h, .L = 200, .r = start_r, .a = 1},
                        ChargeLayer{.p_0 = 0.0000007, .h = h, .L = 200, .r = end_r, .a = 1}}),
@@ -115,11 +117,9 @@ LightningTree::LightningTree(double h, double delta_t, double r, double R, size_
           std::array<double, 3>{end_r[0] - start_r[0] + 5 * h, end_r[1] - start_r[1] + 5 * h,
                                 end_r[2] - start_r[2] + 20 * h},
           h)),
-      //   external_field_potential(constExternalField(100000.0)),
-      degree_probability_growth(degree_probability_growth),
-      seed(seed),
-      max_number_edges(max_number_edges) {
-    gen = std::mt19937(seed);
+      seed(seed_),
+      max_number_edges(max_number_edges_) {
+    gen = std::mt19937(seed_);
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
     auto first =
@@ -294,12 +294,12 @@ void LightningTree::Grow() {
     int number_of_vertices_before_grow = graph.size();
     for (size_t v_from_id = number_of_vertices_before_grow; v_from_id-- > 0;) {
         // std::cout << v_from_id << "\t" << vertices_activity.size() << std::endl;
-        if (!vertices_activity[v_from_id] || vertices[v_from_id].number_edges >= max_number_edges)
+        if (!vertices_activity[v_from_id] || vertices[v_from_id].number_edges >= static_cast<size_t>(max_number_edges))
             continue;
         bool notGrow = true;
         auto directions = randomDirections();
         for (auto dir : directions) {
-            if (vertices[v_from_id].number_edges >= max_number_edges)
+            if (vertices[v_from_id].number_edges >= static_cast<size_t>(max_number_edges))
                 break;
             int i = dir[0];
             int j = dir[1];
@@ -471,7 +471,7 @@ void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data) {
     std::ofstream fout(path_to_data / "vertex_table.txt");
     fout << "id" << ' ' << 'q' << ' ' << 'Q' << ' ' << 'x' << ' ' << 'y' << ' ' << 'z' << ' '
          << "phi" << '\n';
-    for (int i = 0; i < vertices.size(); i++) {
+    for (size_t i = 0; i < vertices.size(); i++) {
         fout << "lt_" << i << ' ' << vertices[i].q << ' ' << vertices[i].Q << ' '
              << vertices[i].coords[0] << ' ' << vertices[i].coords[1] << ' '
              << vertices[i].coords[2] << ' ' << vertices[i].Phi << '\n';
@@ -479,7 +479,7 @@ void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data) {
     fout.close();
     fout.open(path_to_data / "edge_table.txt");
     fout << "id" << ' ' << "from" << ' ' << "to" << ' ' << "current" << ' ' << "sigma" << '\n';
-    for (int i = 0; i < edges.size(); i++) {
+    for (size_t i = 0; i < edges.size(); i++) {
         if (!edges_activity[i])
             continue;
         fout << "lt_" << i << ' ' << "lt_" << edges[i].from << ' ' << "lt_" << edges[i].to << ' '
@@ -488,9 +488,7 @@ void LightningTree::ReturnFiles(const std::filesystem::path& path_to_data) {
     fout.close();
 }
 
-void LightningTree::ReturnPhi(const std::filesystem::path& path_to_data,
-                              const std::array<double, 3>& start_r,
-                              const std::array<double, 3>& end_r) {
+void LightningTree::ReturnPhi(const std::filesystem::path& path_to_data) {
     std::ofstream fout(path_to_data / "phi_info.txt");
     fout << 'z' << ' ' << "full_phi" << ' ' << "ext_phi" << '\n';
     for (double z = start_r[2]; z < end_r[2]; z += h) {

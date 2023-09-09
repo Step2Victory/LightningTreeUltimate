@@ -14,8 +14,9 @@ int ReadResponse()
 
 int main(int argc, char* argv[]) {
     // Initialize Google’s logging library.
-    auto t = std::chrono::system_clock::now();
-    google::InitGoogleLogging(argv[0]);
+    if (argc) {
+        google::InitGoogleLogging(argv[0]);
+    }
     google::SetLogDestination(google::GLOG_INFO,"./logs/INFO_");
 
     auto project_path = std::filesystem::current_path();//.parent_path();
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
 
             if(i % input_period == 0){
                 lt.ReturnFiles(path_data);
-                lt.ReturnPhi(path_data, lt.start_r, lt.end_r);
+                lt.ReturnPhi(path_data);
                 lt.Info();
                 lt.WriteResponse(1);
                 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
         {
             LOG(INFO) << e.what() << '\n';
             lt.ReturnFiles(path_data);
-            lt.ReturnPhi(path_data, lt.start_r, lt.end_r);
+            lt.ReturnPhi(path_data);
             lt.Info();
             lt.WriteResponse(0);
             return 0;
@@ -66,7 +67,7 @@ int main(int argc, char* argv[]) {
     // lt->Info();
     // // PrintCurrentState(*lt);
     lt.ReturnFiles(path_data);
-    lt.ReturnPhi(path_data, lt.start_r, lt.end_r);
+    lt.ReturnPhi(path_data);
     lt.Info();
     lt.WriteResponse(0);
     google::ShutdownGoogleLogging();
