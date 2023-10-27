@@ -62,7 +62,7 @@ def read_subprocess():
             print("Количество зарядов в графе", charges_number)
             print("Время от начала процесса", time)
             return response
-        except ValueError:
+        except:
             print("Получено не число")
             print(answer)
             return -2

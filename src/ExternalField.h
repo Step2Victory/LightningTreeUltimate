@@ -40,7 +40,7 @@ double Potential(const std::array<double, 3>& point,
                  const std::vector<std::vector<std::vector<double>>>& q_values,
                  const std::array<double, 3>& start, double h) {
     double result = 0;
-    double k = 1 / (4 * std::numbers::pi * epsilon_0);
+    double K = 1 / (4 * std::numbers::pi * epsilon_0);
     for (int i = 0; i < q_values.size(); i++) {
         for (int j = 0; j < q_values[0].size(); j++) {
             for (int k = 0; k < q_values[0][0].size(); k++) {
@@ -50,9 +50,9 @@ double Potential(const std::array<double, 3>& point,
                 double mirror_l = countDistance(r, {point[0], point[1], -point[2]});
 
                 if (l < kEps) {
-                    result += q_values[i][j][k] * k * (1 / h - 1 / mirror_l);
+                    result += q_values[i][j][k] * K * (1 / h - 1 / mirror_l);
                 } else {
-                    result += q_values[i][j][k] * k * (1 / l - 1 / mirror_l);
+                    result += q_values[i][j][k] * K * (1 / l - 1 / mirror_l);
                 }
             }
         }
