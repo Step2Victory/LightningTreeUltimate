@@ -1,7 +1,10 @@
 #include <gtest/gtest.h>
 #include "physics.h"
+#include <cmath>
 
-TEST(PhysicsTest, potential) {
+using namespace physics;
+
+TEST(PhysicsTest, potential_test_1) {
     physics::Vertex vertex{
         .q = 0.0000001,
         .Q = 0.00001,
@@ -9,7 +12,7 @@ TEST(PhysicsTest, potential) {
             {
                 .x = 0,
                 .y = 100,
-                .z = 10000,
+                .z = 0,
             },
     };
     physics::Vector r = {
@@ -18,12 +21,14 @@ TEST(PhysicsTest, potential) {
         .z = 0,
     };
     auto ans = physics::potential(r, vertex, 100);
-    EXPECT_NEAR(ans, 0.1, 0.0000001);
+    EXPECT_NEAR(ans, 907.74273101837866, 1e-7);
 }
 
-TEST(PhysicsTest, distance) {
-    // TO DO
+TEST(PhysicsTest, distance_test_1) {
+    EXPECT_NEAR(distance({0, 0, 0}, {0, 0, 0}), 0, 1e-9);
+    EXPECT_NEAR(distance({1, 0, 0}, {0, 0, 0}), 1, 1e-9);
+    EXPECT_NEAR(distance({0, -2, 0}, {0, 2, 0}), 4, 1e-9);
+    EXPECT_NEAR(distance({1, 0, 1}, {0, -1, 0}), std::sqrt(3), 1e-9);
 }
 
-// Add some other tests
-// TO DO
+// TODO: Add some other tests

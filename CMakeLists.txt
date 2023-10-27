@@ -19,9 +19,11 @@ add_subdirectory(libs)
 find_package(glog 0.6.0 REQUIRED)
 find_package(yaml-cpp REQUIRED)
 
-add_executable(main main.cpp)
+
+add_executable(main main.cpp src/LightningTree.cpp)
 target_link_libraries(main glog::glog
-                            yaml-cpp)
+                            yaml-cpp
+                            compiler_flags)
 
 add_executable(LibsExample libs_example.cpp)
 target_link_libraries(LibsExample Libs)

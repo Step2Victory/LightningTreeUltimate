@@ -25,7 +25,6 @@ concept VertexSequence = std::ranges::range<T> && std::is_same_v<typename T::val
 
 template <VertexSequence Range>
 double potential(const Vector& vector, const Range& range, double h) {
-
     return std::accumulate(std::ranges::begin(range), std::ranges::end(range), 0,
                            [h, vector](double ans, const Vertex& vertex) {
                                return ans + potential(vector, vertex, h);

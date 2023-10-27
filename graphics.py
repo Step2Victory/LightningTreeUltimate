@@ -53,9 +53,14 @@ def continue_subprocess():
 
 def read_subprocess():
     global p
+    answer = None
     if p is not None:
         try:
-            answer = p.stdout.readline().split()
+            print("here")
+            resp = p.stdout.readline()
+            print(resp)
+            answer = resp.split()
+            
             response, iter_number, charges_number = map(int, answer[:-1])
             time = float(answer[-1])
             print("Номер итерации: ", iter_number)

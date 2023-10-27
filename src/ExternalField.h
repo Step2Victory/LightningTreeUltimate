@@ -40,19 +40,19 @@ double Potential(const std::array<double, 3>& point,
                  const std::vector<std::vector<std::vector<double>>>& q_values,
                  const std::array<double, 3>& start, double h) {
     double result = 0;
-    double K = 1 / (4 * std::numbers::pi * epsilon_0);
-    for (int i = 0; i < q_values.size(); i++) {
-        for (int j = 0; j < q_values[0].size(); j++) {
-            for (int k = 0; k < q_values[0][0].size(); k++) {
+    double coulombConstant = 1 / (4 * std::numbers::pi * epsilon_0);
+    for (size_t i = 0; i < q_values.size(); i++) {
+        for (size_t j = 0; j < q_values[0].size(); j++) {
+            for (size_t k = 0; k < q_values[0][0].size(); k++) {
                 std::array<double, 3> r = {start[0] + h * i, start[1] + h * j, start[2] + h * k};
 
                 double l = countDistance(r, point);
                 double mirror_l = countDistance(r, {point[0], point[1], -point[2]});
 
                 if (l < kEps) {
-                    result += q_values[i][j][k] * K * (1 / h - 1 / mirror_l);
+                    result += q_values[i][j][k] * coulombConstant * (1 / h - 1 / mirror_l);
                 } else {
-                    result += q_values[i][j][k] * K * (1 / l - 1 / mirror_l);
+                    result += q_values[i][j][k] * coulombConstant * (1 / l - 1 / mirror_l);
                 }
             }
         }
@@ -78,9 +78,9 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
 
     std::vector<std::vector<std::vector<double>>> potential_values(q_values);
 
-    for (int i = 0; i < q_values.size(); i++) {
-        for (int j = 0; j < q_values[0].size(); j++) {
-            for (int k = 0; k < q_values[0][0].size(); k++) {
+    for (size_t i = 0; i < q_values.size(); i++) {
+        for (size_t j = 0; j < q_values[0].size(); j++) {
+            for (size_t k = 0; k < q_values[0][0].size(); k++) {
                 double q = 0;
                 std::array<double, 3> point = {start[0] + h * i, start[1] + h * j,
                                                start[2] + h * k};
@@ -98,9 +98,9 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
             }
         }
     }
-    for (int i = 0; i < q_values.size(); i++) {
-        for (int j = 0; j < q_values[0].size(); j++) {
-            for (int k = 0; k < q_values[0][0].size(); k++) {
+    for (size_t i = 0; i < q_values.size(); i++) {
+        for (size_t j = 0; j < q_values[0].size(); j++) {
+            for (size_t k = 0; k < q_values[0][0].size(); k++) {
                 std::array<double, 3> point = {start[0] + h * i, start[1] + h * j,
                                                start[2] + h * k};
                 potential_values[i][j][k] = Potential(point, q_values, start, h);
@@ -118,8 +118,8 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
             // static_cast((coords[1] - r[1])/h), static_cast((coords[2] -
             // r[2])/h)};
             if (shift[0] < 0 || shift[1] < 0 || shift[1] < 0 ||
-                shift[0] >= potential_values.size() || shift[1] >= potential_values[0].size() ||
-                shift[1] >= potential_values[0][0].size()) {
+                shift[0] >= static_cast<int>(potential_values.size()) || shift[1] >= static_cast<int>(potential_values[0].size()) ||
+                shift[1] >= static_cast<int>(potential_values[0][0].size())) {
                 LOG(INFO) << "Выход за границу расчетной области!\n";
                 // throw std::runtime_error{"Выход за границу расчетной
                 // области!"};
