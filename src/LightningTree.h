@@ -1,4 +1,6 @@
 #pragma once
+#include "Octree.h"
+
 #include <vector>
 #include <array>
 #include <functional>
@@ -94,6 +96,8 @@ private:
     std::vector<bool> vertices_activity;
     std::vector<Edge> edges;
     std::vector<bool> edges_activity;
+
+    Octree octree;
 
     // здесь индексы в массиве ребер
 

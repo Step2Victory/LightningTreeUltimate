@@ -82,6 +82,7 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
                          .number_edges = 0,
                          .growless_iter_number = 0});
     addEdge(first, second);
+    octree = Octree(start_r, end_r, vertices);
 }
 
 LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, size_t periphery_size_,
@@ -141,6 +142,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
                          .number_edges = 0,
                          .growless_iter_number = 0});
     addEdge(first, second);
+    octree = Octree(start_r, end_r, vertices);
 }
 
 void LightningTree::NextIter() {
@@ -158,26 +160,27 @@ void LightningTree::NextIter() {
 }
 
 double LightningTree::Potential(const std::array<double, 3>& coords) {
-    double Phi = 0;
-    for (auto& vertex : vertices) {
-        double l = countDistance(vertex.coords, coords);
-        double mirror_l = countDistance(vertex.coords, {coords[0], coords[1], -coords[2]});
-        double k = 1 / (4 * std::numbers::pi * epsilon_0);
-        if (l < kEps) {
-            if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
-                LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
-            }
-            Phi += vertex.q * k * (1 / (h / 2 + r) - 1 / (mirror_l + r)) +
-                   vertex.Q * k * (1 / (h / 2 + R) - 1 / (mirror_l + R));
-        } else {
-            if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
-                LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
-            }
-            Phi += vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
-                   vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
-        }
-    }
-    return Phi;
+    // double Phi = 0;
+    // for (auto& vertex : vertices) {
+    //     double l = countDistance(vertex.coords, coords);
+    //     double mirror_l = countDistance(vertex.coords, {coords[0], coords[1], -coords[2]});
+    //     double k = 1 / (4 * std::numbers::pi * epsilon_0);
+    //     if (l < kEps) {
+    //         if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
+    //             LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
+    //         }
+    //         Phi += vertex.q * k * (1 / (h / 2 + r) - 1 / (mirror_l + r)) +
+    //                vertex.Q * k * (1 / (h / 2 + R) - 1 / (mirror_l + R));
+    //     } else {
+    //         if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
+    //             LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
+    //         }
+    //         Phi += vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
+    //                vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
+    //     }
+    // }
+    // return Phi;
+    return octree.potencial_in_point(coords, r, R, h);
 }
 
 void LightningTree::CountPotential() {
@@ -287,6 +290,7 @@ void LightningTree::Transport() {
         }
     }
     iter_number++;
+    octree.recalc_sumCharge(vertices); // Актуализация зарядов в октодереве
 }
 
 void LightningTree::Grow() {
@@ -339,6 +343,8 @@ void LightningTree::Grow() {
                     vertices_activity[*v_to_id] = true;
                 }
 
+                octree.add_charge(*v_to_id, vertices);
+
                 if (e_id == -1) {
                     addEdge(v_from_id, *v_to_id);
                 } else {
@@ -385,6 +391,7 @@ void LightningTree::Delete() {
             vertices_activity[v_id] = false;
             vertices[v_id].growless_iter_number = 0;
             vertices[v_id].number_edges = 0;
+            octree.delete_charge(v_id, vertices);
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     for (int k = 0; k < 3; k++) {
