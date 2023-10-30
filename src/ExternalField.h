@@ -4,9 +4,7 @@
 #include <vector>
 #include <functional>
 #include <numbers>
-
-constexpr double epsilon_0 = 8.854187817619999806e-12;
-constexpr double kEps = 1e-9;
+#include "Constants.h"
 
 struct ChargeLayer {
     double p_0;

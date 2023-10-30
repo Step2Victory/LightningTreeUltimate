@@ -4,9 +4,8 @@
 #include <array>
 #include <cmath>
 #include <numbers>
+#include "Constants.h"
 
-constexpr double epsilon_0 = 8.854187817619999806e-12;
-constexpr double kEps = 1e-9;
 constexpr double tetta = 0.1;
 
 class Octree{
@@ -51,7 +50,7 @@ class Octree{
         }
 
         void add_charges(auto& charges){
-            for(size_t i = 0; i < charges.szie(); i++){
+            for(size_t i = 0; i < charges.size(); i++){
                 add_charge(i, charges);
             }
         }
@@ -180,21 +179,21 @@ class Octree{
             this->center_mass = std::array<double, 3>{};
         }
 
-        size_t find_child(size_t id_charge, const auto& charges){
+        Node find_child(size_t id_charge, const auto& charges){
             std::vector<Node> temp(children);
-            if(charges[id_charge][2] > center[2]){
-                temp.erase(0, 4);
+            if(charges[id_charge].coords[2] > center[2]){
+                temp.erase(temp.begin(), temp.begin() + 4);
             } else {
-                temp.erase(4, temp.cend());
+                temp.erase(temp.begin() + 4, temp.end());
             }
 
-            if(charges[id_charge][1] > center[1]){
-                temp.erase(0, 2);
+            if(charges[id_charge].coords[1] > center[1]){
+                temp.erase(temp.begin(), temp.begin() + 2);
             } else {
-                temp.erase(2, temp.cend());
+                temp.erase(temp.begin() + 2, temp.end());
             }
 
-            if(charges[id_charge][0] > center[0]){
+            if(charges[id_charge].coords[0] > center[0]){
                 return temp[1];
             } else {
                 return temp[0];
