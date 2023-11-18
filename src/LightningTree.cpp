@@ -52,9 +52,10 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
                                      .r = layer["r"].as<std::array<double, 3>>(),
                                      .a = layer["a"].as<double>()});
     }
-    external_field_potential = countExternalField(layers, start_r, end_r, h);
-    // external_field_potential = constExternalField(6000.0);
-
+    // std::cout<<"Расчёт внешнего поля\n";
+    // external_field_potential = countExternalField(layers, start_r, end_r, h);
+    external_field_potential = constExternalField(6000.0);
+    // std::cout<<"Расчёт завершён\n";
     // std::cout << "external field max: " << external_field_potential({0, 0, 10000}) << '\n';
 
     seed = config["seed"].as<int>();
@@ -67,8 +68,8 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
         addVertex(Vertex{.q = 0,
                          .Q = 0,
                          .Phi = 0,
-                         .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
-                                    (end_r[2] + start_r[2]) / 2 - h},
+                         .coords = {(end_r[0] + start_r[0]) / 2 - h/2, (end_r[1] + start_r[1]) / 2 - h/2,
+                                    (end_r[2] + start_r[2]) / 2 - h/2},
                          .internal_coords = {0, 0, 0},
                          .number_edges = 0,
                          .growless_iter_number = 0});
@@ -76,13 +77,15 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
         addVertex(Vertex{.q = 0,
                          .Q = 0,
                          .Phi = 0,
-                         .coords = {(end_r[0] + start_r[0]) / 2, (end_r[1] + start_r[1]) / 2,
-                                    (end_r[2] + start_r[2]) / 2},
+                         .coords = {(end_r[0] + start_r[0]) / 2 + h/2, (end_r[1] + start_r[1]) / 2 + h/2,
+                                    (end_r[2] + start_r[2]) / 2 + h/2},
                          .internal_coords = {0, 0, 1},
                          .number_edges = 0,
                          .growless_iter_number = 0});
     addEdge(first, second);
+    // std::cout<<"Создание октодерева\n";
     octree = Octree(start_r, end_r, vertices);
+    // std::cout<<"Завершение создание октодерева\n";
 }
 
 LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, size_t periphery_size_,
@@ -210,6 +213,7 @@ void LightningTree::CountSigma() {
         double E = CountElectricity(vertices[edge.from], vertices[edge.to]);
         // std::cout << E << "\n";
         edge.sigma *= std::exp((alpha * E * E - beta) * delta_t);
+        // std::cout<<"alpha = "<<alpha<<" beta = "<<beta<<" E = "<<E<<" sima = "<<edge.sigma<<std::endl;
 
         if (!checkDouble(sigma)) {
             LOG(INFO) << "Incorrect sigma value " << sigma;
@@ -220,8 +224,10 @@ void LightningTree::CountSigma() {
 
 void LightningTree::CountCurrent() {
     for (auto& edge : edges) {
-        edge.current = std::numbers::pi * r * r * edge.sigma *
-                       CountElectricity(vertices[edge.from], vertices[edge.to]);
+        double E = CountElectricity(vertices[edge.from], vertices[edge.to]);
+        edge.current = std::numbers::pi * r * r * edge.sigma * E;
+                    //    CountElectricity(vertices[edge.from], vertices[edge.to]);
+        // std::cout<<"Радиус канала = "<<r<<" Сигма = "<<edge.sigma<<" Напряженность = "<<E<<" Ток = "<<edge.current<<std::endl;
         if (!checkDouble(edge.current)) {
             LOG(INFO) << "Error in current " << edge.current;
             throw std::runtime_error{"bad current"};
