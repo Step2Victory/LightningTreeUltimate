@@ -143,8 +143,7 @@ class Octree{
                     for(int j = 0; j < 2; j++){
                         for(int k = 0; k < 2; k++){
                             children.push_back(std::make_unique<Node>(
-                                        Node{.id_charge = NULL,
-                                             .sum_q = 0,
+                                        Node{.sum_q = 0,
                                              .sum_Q = 0,
                                              .center = {center[0] + (2*i - 1) * size / 4,
                                                         center[1] + (2*j - 1) * size / 4,
@@ -182,10 +181,10 @@ class Octree{
         }
 
         void clear(){
-            id_charge = NULL;
+            id_charge.reset();
             sum_q = 0;
             sum_Q = 0;
-            center_mass = {NULL, NULL, NULL};
+            center_mass.reset();
         }
 
         Node find_child(size_t id, const auto& charges){
@@ -241,16 +240,14 @@ class Octree{
     Octree(){}
 
     Octree(const std::array<double, 3>& start, const std::array<double, 3>& end) {
-        root = Node{.id_charge = NULL,
-                    .sum_q = 0,
+        root = Node{.sum_q = 0,
                     .sum_Q = 0,
                     .center = {(end[0] + start[0]) / 2, (end[1] + start[1]) / 2, (end[2] + start[2]) / 2},
                     .size = std::max(std::max(end[0] - start[0], end[1] - start[1]), std::max(end[1] - start[1], end[2] - start[2]))};
     }
 
     Octree(const std::array<double, 3>& start, const std::array<double, 3>& end, const auto& charges) {
-        root = Node{.id_charge = NULL,
-                    .sum_q = 0,
+        root = Node{.sum_q = 0,
                     .sum_Q = 0,
                     .center = {(end[0] + start[0]) / 2, (end[1] + start[1]) / 2, (end[2] + start[2]) / 2},
                     .size = std::max(std::max(end[0] - start[0], end[1] - start[1]), std::max(end[1] - start[1], end[2] - start[2]))};
