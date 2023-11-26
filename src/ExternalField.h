@@ -6,6 +6,8 @@
 #include <numbers>
 #include "Constants.h"
 
+#include "Octree.h"
+
 struct ChargeLayer {
     double p_0;
     double h;
@@ -69,6 +71,7 @@ std::function<double(const std::array<double, 3>&)> constExternalField(double ex
 std::function<double(const std::array<double, 3>&)> countExternalField(
     const std::vector<ChargeLayer>& layers, const std::array<double, 3>& start,
     const std::array<double, 3>& end, double h) {
+    
     std::vector<std::vector<std::vector<double>>> q_values(
         (end[0] - start[0]) / h,
         std::vector<std::vector<double>>((end[1] - start[1]) / h,
@@ -96,6 +99,7 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
             }
         }
     }
+
     for (size_t i = 0; i < q_values.size(); i++) {
         for (size_t j = 0; j < q_values[0].size(); j++) {
             for (size_t k = 0; k < q_values[0][0].size(); k++) {
@@ -122,6 +126,75 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
                 // throw std::runtime_error{"Выход за границу расчетной
                 // области!"};
             }
+            return potential_values[shift[0]][shift[1]][shift[2]];
+        };
+    return result;
+}
+
+std::function<double(const std::array<double, 3>&)> countExternalField_octree(
+    const std::vector<ChargeLayer>& layers, const std::array<double, 3>& start,
+    const std::array<double, 3>& end, double h) {
+
+        Octree octree(start, end);
+        std::vector<std::vector<std::vector<double>>>  potential_values(
+        (end[0] - start[0]) / h,
+        std::vector<std::vector<double>>((end[1] - start[1]) / h,
+                                         std::vector<double>((end[2] - start[2]) / h)));
+
+        // std::cout<<"Расчёт зарядов внешнего поля\n";
+        for (size_t i = 0; i <  potential_values.size(); i++) {
+            for (size_t j = 0; j <  potential_values[0].size(); j++) {
+                for (size_t k = 0; k <  potential_values[0][0].size(); k++) {
+                    double q = 0;
+                    std::array<double, 3> point = {start[0] + h * i, start[1] + h * j,
+                                                start[2] + h * k};
+                    for (auto& layer : layers) {
+                        std::array<double, 3> cur = {point[0] - layer.r[0], point[1] - layer.r[1],
+                                                    point[2] - layer.r[2]};
+
+                        auto expr = -std::pow(std::sqrt(cur[2] * cur[2]) / layer.h, 2 * layer.a) -
+                                    std::pow(std::sqrt(cur[0] * cur[0] + cur[1] * cur[1]) / layer.L,
+                                            2 * layer.a);
+                        q += layer.p_0 * std::exp(expr) * h * h * h;
+                        // std::cout << "q = " << q << ", exp(expr) = " << std::exp(expr) << '\n';
+                    }
+                    octree.add_charge(q, point);
+                }
+            }
+        }
+
+        std::cout<<"Расчёт потенциалов внешнего поля\n";
+        for (size_t i = 0; i < potential_values.size(); i++) {
+            for (size_t j = 0; j < potential_values[0].size(); j++) {
+                for (size_t k = 0; k < potential_values[0][0].size(); k++) {
+                    std::array<double, 3> point = {start[0] + h * i, start[1] + h * j,
+                                                start[2] + h * k};
+                    // std::cout<<"i = "<<i<<"/"<<potential_values.size()
+                    //             <<" , j = "<<j<<"/"<<potential_values[0].size()
+                    //             <<", k = "<<k<<"/"<<potential_values[0][0].size()<<std::endl;
+                    potential_values[i][j][k] = octree.potencial_in_point(point, h);
+                }
+            }
+        }
+        std::cout<<"Расчёт завершился\n";
+
+        std::function<double(const std::array<double, 3>&)> result =
+        [potential_values = std::move(potential_values), r = start,
+         h](const std::array<double, 3>& coords) {
+            std::cout<<"Проверка\n";
+            std::array<int, 3> shift = {static_cast<int>((coords[0] - r[0]) / h),
+                                        static_cast<int>((coords[1] - r[1]) / h),
+                                        static_cast<int>((coords[2] - r[2]) / h)};
+            if (shift[0] < 0 || shift[1] < 0 || shift[1] < 0 ||
+                shift[0] >= static_cast<int>(potential_values.size()) || shift[1] >= static_cast<int>(potential_values[0].size()) ||
+                shift[1] >= static_cast<int>(potential_values[0][0].size())) {
+                LOG(INFO) << "Выход за границу расчетной области!\n";
+                // throw std::runtime_error{"Выход за границу расчетной
+                // области!"};
+            }
+            std::cout<<"i = "<<shift[0]<<"/"<<potential_values.size()
+                    <<" , j = "<<shift[1]<<"/"<<potential_values[0].size()
+                    <<", k = "<<shift[2]<<"/"<<potential_values[0][0].size()<<std::endl;
             return potential_values[shift[0]][shift[1]][shift[2]];
         };
     return result;

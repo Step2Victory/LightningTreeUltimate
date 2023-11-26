@@ -1,5 +1,5 @@
 #pragma once
-#include "Octree.h"
+#include "DynamicOctree.h"
 
 #include <vector>
 #include <array>
@@ -99,7 +99,7 @@ private:
     std::vector<Edge> edges; // рёбра
     std::vector<bool> edges_activity; // активность рёбер
 
-    Octree octree; // структура хранения зарядов в виде восмиричного дерева
+    DynamicOctree dynoctree; // структура хранения зарядов в виде восмиричного дерева
 
     // здесь индексы в массиве ребер
 
