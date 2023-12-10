@@ -4,9 +4,9 @@ r: 0.01
 R: 50
 periphery_size: 1
 q_plus_max: 1.66898e-09
-q_minus_max: 3.33795e-09
+q_minus_max: -3.33795e-09
 Q_plus_s: 0.000417244
-Q_minus_s: 0.000834488
+Q_minus_s: -0.000834488
 resistance: 1
 E_plus: 150000
 E_minus: 300000
@@ -23,14 +23,14 @@ end_x: 500
 end_y: 500
 end_z: 11000
 external_field_layers: 
-  - p_0 : -0.0000005
-    h: 100
-    L: 200
-    r: [0, 0, 8000]
-    a: 4
-  - p_0: 0.0000005
+  - p_0 : 0.5e-06
     h: 100
     L: 200
     r: [0, 0, 10000]
-    a: 1
+    a: 2
+  - p_0: -0.5e-06
+    h: 100
+    L: 200
+    r: [0, 0, 8000]
+    a: 2
 degree_probability_growth: 1

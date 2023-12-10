@@ -89,25 +89,32 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
                     std::array<double, 3> cur = {point[0] - layer.r[0], point[1] - layer.r[1],
                                                  point[2] - layer.r[2]};
 
-                    auto expr = -std::pow(std::sqrt(cur[2] * cur[2]) / layer.h, 2 * layer.a) -
+                    auto expr = -std::pow(std::sqrt(cur[2]*cur[2]) / layer.h, 2 * layer.a) -
                                 std::pow(std::sqrt(cur[0] * cur[0] + cur[1] * cur[1]) / layer.L,
                                          2 * layer.a);
                     q += layer.p_0 * std::exp(expr) * h * h * h;
                     // std::cout << "q = " << q << ", exp(expr) = " << std::exp(expr) << '\n';
                 }
                 q_values[i][j][k] = q;
+                // std::cout<<q<<" ";
             }
+            // std::cout<<"\t";
         }
+        // std::cout<<std::endl;
     }
 
+    // std::cout<<"Расчёт потенциалов внешнего поля\n";
     for (size_t i = 0; i < q_values.size(); i++) {
         for (size_t j = 0; j < q_values[0].size(); j++) {
             for (size_t k = 0; k < q_values[0][0].size(); k++) {
                 std::array<double, 3> point = {start[0] + h * i, start[1] + h * j,
                                                start[2] + h * k};
                 potential_values[i][j][k] = Potential(point, q_values, start, h);
+                // std::cout<<potential_values[i][j][k]<<" ";
             }
+            // std::cout<<"\t";
         }
+        // std::cout<<std::endl;
     }
 
     std::function<double(const std::array<double, 3>&)> result =
@@ -131,6 +138,9 @@ std::function<double(const std::array<double, 3>&)> countExternalField(
     return result;
 }
 
+/*
+    Расчёт внешнего поля с помощью октодерева
+*/
 std::function<double(const std::array<double, 3>&)> countExternalField_octree(
     const std::vector<ChargeLayer>& layers, const std::array<double, 3>& start,
     const std::array<double, 3>& end, double h) {
@@ -152,36 +162,41 @@ std::function<double(const std::array<double, 3>&)> countExternalField_octree(
                         std::array<double, 3> cur = {point[0] - layer.r[0], point[1] - layer.r[1],
                                                     point[2] - layer.r[2]};
 
-                        auto expr = -std::pow(std::sqrt(cur[2] * cur[2]) / layer.h, 2 * layer.a) -
+                        auto expr = -std::pow(std::sqrt(cur[2]*cur[2]) / layer.h, 2 * layer.a) -
                                     std::pow(std::sqrt(cur[0] * cur[0] + cur[1] * cur[1]) / layer.L,
                                             2 * layer.a);
                         q += layer.p_0 * std::exp(expr) * h * h * h;
                         // std::cout << "q = " << q << ", exp(expr) = " << std::exp(expr) << '\n';
                     }
                     octree.add_charge(q, point);
+                    // std::cout<<"Заряд в дереве: "<<octree.get_charge(point)<<'\n';
                 }
             }
         }
 
-        std::cout<<"Расчёт потенциалов внешнего поля\n";
+        // std::cout<<octree;
+
+        // std::cout<<"Расчёт потенциалов внешнего поля\n";
         for (size_t i = 0; i < potential_values.size(); i++) {
+            std::array<double, 3> point;
             for (size_t j = 0; j < potential_values[0].size(); j++) {
                 for (size_t k = 0; k < potential_values[0][0].size(); k++) {
-                    std::array<double, 3> point = {start[0] + h * i, start[1] + h * j,
+                    // std::array<double, 3> 
+                    point = {start[0] + h * i, start[1] + h * j,
                                                 start[2] + h * k};
-                    // std::cout<<"i = "<<i<<"/"<<potential_values.size()
-                    //             <<" , j = "<<j<<"/"<<potential_values[0].size()
-                    //             <<", k = "<<k<<"/"<<potential_values[0][0].size()<<std::endl;
                     potential_values[i][j][k] = octree.potencial_in_point(point, h);
+                    // std::cout<<potential_values[i][j][k]<<" ";
                 }
+                // std::cout<<'\t';
             }
+            // std::cout<<std::endl;
         }
-        std::cout<<"Расчёт завершился\n";
+
 
         std::function<double(const std::array<double, 3>&)> result =
         [potential_values = std::move(potential_values), r = start,
          h](const std::array<double, 3>& coords) {
-            std::cout<<"Проверка\n";
+            // std::cout<<"Проверка\n";
             std::array<int, 3> shift = {static_cast<int>((coords[0] - r[0]) / h),
                                         static_cast<int>((coords[1] - r[1]) / h),
                                         static_cast<int>((coords[2] - r[2]) / h)};
@@ -192,9 +207,6 @@ std::function<double(const std::array<double, 3>&)> countExternalField_octree(
                 // throw std::runtime_error{"Выход за границу расчетной
                 // области!"};
             }
-            std::cout<<"i = "<<shift[0]<<"/"<<potential_values.size()
-                    <<" , j = "<<shift[1]<<"/"<<potential_values[0].size()
-                    <<", k = "<<shift[2]<<"/"<<potential_values[0][0].size()<<std::endl;
             return potential_values[shift[0]][shift[1]][shift[2]];
         };
     return result;

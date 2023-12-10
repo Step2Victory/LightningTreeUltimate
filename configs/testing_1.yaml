@@ -4,9 +4,9 @@ r: 0.01
 R: 50
 periphery_size: 1
 q_plus_max: 1.66898e-09
-q_minus_max: 3.33795e-09
+q_minus_max: -3.33795e-09
 Q_plus_s: 0.000417244
-Q_minus_s: 0.000834488
+Q_minus_s: -0.000834488
 resistance: 1
 E_plus: 150000
 E_minus: 300000
