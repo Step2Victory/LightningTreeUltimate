@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     }
     google::SetLogDestination(google::GLOG_INFO,"./logs/INFO_");
 
-    auto project_path = std::filesystem::current_path();//.parent_path();
+    auto project_path = std::filesystem::current_path().parent_path();
     //auto project_path = ""
     YAML::Node config = YAML::LoadFile(project_path / "configs" / "main.yaml");
     auto path_data = project_path / config["path_to_data_for_python"].as<std::string>();

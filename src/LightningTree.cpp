@@ -54,8 +54,8 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
     }
     // std::cout<<"Расчёт внешнего поля\n";
     // auto start = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    external_field_potential = countExternalField(layers, start_r, end_r, h);
-    // external_field_potential = countExternalField_octree(layers, start_r, end_r, h); // версия с октодеревом
+    // external_field_potential = countExternalField(layers, start_r, end_r, h);
+    external_field_potential = countExternalField_octree(layers, start_r, end_r, h); // версия с октодеревом
     // external_field_potential = constExternalField(6000.0);
     // auto end = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     // std::cout<<"Расчёт завершён. Время = "<<end-start<<'\n';
@@ -67,7 +67,7 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
     max_number_edges = config["max_number_edges"].as<int>();
-    dynoctree = DynamicOctree(start_r, end_r);
+    // dynoctree = DynamicOctree(start_r, end_r);
     auto first =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
@@ -77,7 +77,7 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
                          .internal_coords = {0, 0, 0},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    dynoctree.add_charge(first, vertices);
+    // dynoctree.add_charge(first, vertices);
     auto second =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
@@ -87,10 +87,10 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
                          .internal_coords = {0, 0, 1},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    dynoctree.add_charge(second, vertices);
+    // dynoctree.add_charge(second, vertices);
     addEdge(first, second);
 
-    // dynoctree.print('d');
+    // // dynoctree.print('d');
 }
 
 LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, size_t periphery_size_,
@@ -131,7 +131,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
     gen = std::mt19937(seed_);
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
-    dynoctree = DynamicOctree(start_r, end_r);
+    // dynoctree = DynamicOctree(start_r, end_r);
     auto first =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
@@ -141,7 +141,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
                          .internal_coords = {0, 0, 0},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    dynoctree.add_charge(first, vertices);
+    // dynoctree.add_charge(first, vertices);
     auto second =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
@@ -151,7 +151,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
                          .internal_coords = {0, 0, 1},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    dynoctree.add_charge(second, vertices);
+    // dynoctree.add_charge(second, vertices);
     addEdge(first, second);
 }
 
@@ -311,8 +311,8 @@ void LightningTree::Transport() {
     //         std::cout<<"Вершина "<<i<<" не активна\n";
     // }
     iter_number++;
-    dynoctree.recalc_sumCharge(vertices); // Актуализация зарядов в октодереве
-    // dynoctree.print('d');
+    // dynoctree.recalc_sumCharge(vertices); // Актуализация зарядов в октодереве
+    // // dynoctree.print('d');
 }
 
 void LightningTree::Grow() {
@@ -365,7 +365,7 @@ void LightningTree::Grow() {
                     vertices_activity[*v_to_id] = true;
                 }
 
-                dynoctree.add_charge(*v_to_id, vertices);
+                // dynoctree.add_charge(*v_to_id, vertices);
 
                 if (e_id == -1) {
                     addEdge(v_from_id, *v_to_id);
@@ -413,7 +413,7 @@ void LightningTree::Delete() {
             vertices_activity[v_id] = false;
             vertices[v_id].growless_iter_number = 0;
             vertices[v_id].number_edges = 0;
-            dynoctree.delete_charge(v_id, vertices);
+            // dynoctree.delete_charge(v_id, vertices);
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     for (int k = 0; k < 3; k++) {
