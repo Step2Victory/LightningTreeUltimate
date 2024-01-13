@@ -560,9 +560,10 @@ std::array<std::pair<double, std::array<int, 3>>, 26> LightningTree::GetPotencia
                     continue;
                 }
                 std::array<double, 3> new_point = countCoords(vid, {i, j, k});
-                double Phi = Potential(new_point);
+                double l = countDistance(vertices[vid].coords, new_point);
+                double E = (-(vertices[vid].Phi - Potential(new_point)) / l);
                 // std::cout<<Phi<<", ";
-                potencial_dir[i*9 + j*3 + k] = std::pair<double, std::array<int, 3>>(Phi, {i, j, k});
+                potencial_dir[i*9 + j*3 + k] = std::pair<double, std::array<int, 3>>(E, {i, j, k});
             }
         }
     }

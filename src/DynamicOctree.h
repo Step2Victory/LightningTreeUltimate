@@ -151,12 +151,12 @@ class DynamicOctree{
                 double q = 0, Q = 0;
                 std::array<double, 3> moment = {0, 0, 0};
                 for(auto& child : children){
-                    (*child).recalc_sumCharge(charges);
-                    q += (*child).sum_q;
-                    Q += (*child).sum_Q;
-                    moment[0] += ((*child).sum_q + (*child).sum_Q) * (*child).center_mass[0];
-                    moment[1] += ((*child).sum_q + (*child).sum_Q) * (*child).center_mass[1];
-                    moment[2] += ((*child).sum_q + (*child).sum_Q) * (*child).center_mass[2];
+                    child->recalc_sumCharge(charges);
+                    q += child->sum_q;
+                    Q += child->sum_Q;
+                    moment[0] += (child->sum_q + child->.sum_Q) * child->center_mass[0];
+                    moment[1] += (child->sum_q + child->sum_Q) * child->center_mass[1];
+                    moment[2] += (child->sum_q + child->sum_Q) * child->center_mass[2];
                 }
                 sum_q = q;
                 sum_Q = Q;
@@ -199,7 +199,7 @@ class DynamicOctree{
                             sum_Q * k * (1 / (l + R) - 1 / (mirror_l + R));
                 } else {
                     for(auto& child : children){
-                        phi += (*child).potencial_in_point(point, r, R, h);
+                        phi += child->potencial_in_point(point, r, R, h);
                     }
                 }
             }
@@ -226,7 +226,7 @@ class DynamicOctree{
             // } else {
             //     double phi = 0;
             //     for(auto& child : children){
-            //         phi += (*child).potencial_in_point(point, r, R, h);
+            //         phi += child->potencial_in_point(point, r, R, h);
             //     }
             //     return phi;
             // }
@@ -265,16 +265,16 @@ class DynamicOctree{
             int count = 0;
             size_t id;
             for(size_t i = 0; i < children.size(); i++){
-                if(!node_empty) {
+                if(!children[i]->node_empty) {
                     count++;
                     id = i;
                 }
             }
             if(count == 1){
-                id_charge = (*children[id]).id_charge;
-                sum_q = (*children[id]).sum_q;
-                sum_Q = (*children[id]).sum_Q;
-                center_mass = (*children[id]).center_mass;
+                id_charge = children[id]->id_charge;
+                sum_q = children[id]->sum_q;
+                sum_Q = children[id]->sum_Q;
+                center_mass = children[id]->center_mass;
                 children.clear();
                 return true;
             }
@@ -330,10 +330,10 @@ class DynamicOctree{
             // std::cout<<"Запуск расчёта центра масс\n";
             std::array<double, 3> moment = {0, 0, 0};
             for(auto& child : children){
-                if(!(*child).node_empty){
-                    moment[0] += (*child).center_mass[0] * ((*child).sum_Q + (*child).sum_q);
-                    moment[1] += (*child).center_mass[1] * ((*child).sum_Q + (*child).sum_q);
-                    moment[2] += (*child).center_mass[2] * ((*child).sum_Q + (*child).sum_q);
+                if(!child->node_empty){
+                    moment[0] += child->center_mass[0] * (child->sum_Q + child->sum_q);
+                    moment[1] += child->center_mass[1] * (child->sum_Q + child->sum_q);
+                    moment[2] += child->center_mass[2] * (child->sum_Q + child->sum_q);
                 }
             }
             double sum_charge = (sum_Q + sum_q);
@@ -364,7 +364,7 @@ class DynamicOctree{
                 std::cout << "[";
                 if(config == 'd') {
                     for(auto& child : children){
-                        (*child).print(config);
+                        child->print(config);
                         std::cout << ", ";
                     }
                 } else {
