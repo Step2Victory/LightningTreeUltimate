@@ -32,3 +32,15 @@ std::vector<std::array<int, 3>> randomDirections() {
     }
     return directions;
 }
+
+
+std::array<std::pair<double, std::array<int, 3>>, 26> sortDir(const std::array<std::pair<double, std::array<int, 3>>, 26>& potencial_dir){
+    auto result_sort = potencial_dir;
+    std::sort(result_sort.begin(), result_sort.end(), 
+                [](const std::pair<double, std::array<int, 3>> &x,
+                    const std::pair<double, std::array<int, 3>> &y) 
+                    {
+                        return std::abs(y.first) < std::abs(x.first) || (std::abs(y.first) < std::abs(x.first) && y.second[0] < x.second[0]);
+                    });
+    return result_sort;
+}

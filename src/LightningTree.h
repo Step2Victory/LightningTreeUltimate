@@ -50,6 +50,8 @@ public:
     void ReturnFiles(const std::filesystem::path&);
     void ReturnPhi(const std::filesystem::path&);
 
+    std::array<std::pair<double, std::array<int, 3>>, 26> GetPotencialDir(size_t);
+
 
     
 private:

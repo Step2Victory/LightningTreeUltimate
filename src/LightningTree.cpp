@@ -190,8 +190,8 @@ double LightningTree::Potential(const std::array<double, 3>& coords) {
                    vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
         }
     }
-    // double Phi = dynoctree.potencial_in_point(coords, r, R, h);
-    // std::cout<<"Потенциал циклом: "<<Phi<<", Потенциал октодеревом: "<<phi<<"\n";
+    // Phi = dynoctree.potencial_in_point(coords, r, R, h);
+    // std::cout<<"Потенциал = "<<Phi<<"\n";
     return Phi;
 }
 
@@ -323,20 +323,29 @@ void LightningTree::Grow() {
         if (!vertices_activity[v_from_id] || vertices[v_from_id].number_edges >= static_cast<size_t>(max_number_edges))
             continue;
         bool notGrow = true;
-        auto directions = randomDirections();
-        for (auto dir : directions) {
+        // auto directions = randomDirections();
+        auto temp = GetPotencialDir(v_from_id);
+        auto directions = sortDir(temp);
+        // for(size_t i = 0; i < temp.size(); i++){
+        //     std::cout<<directions[i].first<<", ";
+        // }
+        // std::cout<<std::endl;
+        for (const auto& dir : directions) {
             if (vertices[v_from_id].number_edges >= static_cast<size_t>(max_number_edges))
                 break;
-            int i = dir[0];
-            int j = dir[1];
-            int k = dir[2];
+            // int i = dir[0];
+            // int j = dir[1];
+            // int k = dir[2];
+            int i = dir.second[0];
+            int j = dir.second[1];
+            int k = dir.second[2];
             int e_id = graph[v_from_id][i][j][k];
 
             if ((i == 1 && j == 1 && k == 1) || (e_id != -1 && edges_activity[e_id]))
                 continue;
 
-            auto internal_coords = countInternalCoords(v_from_id, dir);
-            auto coords = countCoords(v_from_id, dir);
+            auto internal_coords = countInternalCoords(v_from_id, dir.second);
+            auto coords = countCoords(v_from_id, dir.second);
             std::optional<size_t> v_to_id;
             Vertex vertex;
 
@@ -346,7 +355,8 @@ void LightningTree::Grow() {
             } else {
                 vertex = Vertex{.q = 0,
                                 .Q = 0,
-                                .Phi = Potential(coords),
+                                .Phi = dir.first,
+                                // .Phi = Potential(coords),
                                 .coords = coords,
                                 .internal_coords = internal_coords,
                                 .number_edges = 0,
@@ -534,4 +544,28 @@ void LightningTree::ReturnPhi(const std::filesystem::path& path_to_data) {
              << '\n';
     }
     fout.close();
+}
+
+std::array<std::pair<double, std::array<int, 3>>, 26> LightningTree::GetPotencialDir(size_t vid)
+{
+    std::array<std::pair<double, std::array<int, 3>>, 26> potencial_dir;
+    for (int i = 0; i < 3; ++i)
+    {
+        for (int j = 0; j < 3; ++j)
+        {
+            for (int k = 0; k < 3; ++k)
+            {
+                if (i == 1 && j == 1 && k == 1)
+                {
+                    continue;
+                }
+                std::array<double, 3> new_point = countCoords(vid, {i, j, k});
+                double Phi = Potential(new_point);
+                // std::cout<<Phi<<", ";
+                potencial_dir[i*9 + j*3 + k] = std::pair<double, std::array<int, 3>>(Phi, {i, j, k});
+            }
+        }
+    }
+    // std::cout<<'\n';
+    return potencial_dir;
 }

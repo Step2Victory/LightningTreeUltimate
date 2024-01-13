@@ -24,24 +24,28 @@ class DynamicOctree{
 
         std::array<double, 3> center;
         double size;
+        int lvl;
         
         std::vector<std::unique_ptr<DynamicNode>> children;
 
         void add_charge(size_t id, const auto& charges){
-            //std::cout<<"Добавление заряда в октодерево\n";
+            // std::cout<<"Добавление заряда id: "<<id<<", координаты {"<<charges[id].coords[0]<<", "<<charges[id].coords[1]<<", "<<charges[id].coords[2]<<"}"<<" в октодерево, уровень: "<<lvl<<'\n';
             if(node_empty){
+                // std::cout<<"Добавление в пустую ноду"<<'\n';
                 node_empty = false;
                 id_charge = id;
                 sum_q = charges[id].q;
                 sum_Q = charges[id].Q;
                 center_mass = {charges[id].coords[0], charges[id].coords[1], charges[id].coords[2]};
             } else {
-                if(children.empty()){
-                    create_children();
-                    size_t id_child = find_id_child(id, charges);
+                if(children.empty() && create_children()){
+                    // std::cout<<"Добавление в новую ноду\n";
+                    size_t id_child = find_id_child(charges[id].coords);
+                    // std::cout<<"id потомка: "<<id_child<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
                     (*children[id_child]).add_charge(id, charges);
                     // std::cout<<"добавление заряда в ноду: "<<children[id_child]<<" с id заряда: "<<children[id_child]->id_charge<<", переданный id "<<id<<'\n';
-                    id_child = find_id_child(id_charge, charges);
+                    id_child = find_id_child(charges[id_charge].coords);
+                    // std::cout<<"id потомка: "<<id_child<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
                     (*children[id_child]).add_charge(id_charge, charges);
                     // std::cout<<"добавление заряда в ноду: "<<children[id_child]<<" с id заряда: "<<children[id_child]->id_charge<<", переданный id "<<id_charge<<'\n';
                     id_charge = 0;
@@ -51,7 +55,9 @@ class DynamicOctree{
                     calc_center_mass();
                     // std::cout<<"расчёт центра масс завершился\n";
                 } else {
-                    size_t id_child = find_id_child(id, charges);
+                    // std::cout<<"Поиск свободной ноды и добавление заряда\n";
+                    size_t id_child = find_id_child(charges[id].coords);
+                    // std::cout<<"id потомка: "<<id_child<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
                     (*children[id_child]).add_charge(id, charges);
                     sum_q += charges[id].q;
                     sum_Q += charges[id].Q;
@@ -108,7 +114,7 @@ class DynamicOctree{
                     else std::cout<<"Ошибка поиска! Не совпадение id вершин\n";
                 }
             } else {
-                size_t id_child = find_id_child(id, charges);
+                size_t id_child = find_id_child(charges[id].coords);
                 (*children[id_child]).delete_charge(id, charges);
                 if(!delete_children()){
                     sum_q -= charges[id].q;
@@ -226,9 +232,9 @@ class DynamicOctree{
             // }
         }
 
-        void create_children(){
-            //std::cout<<"Создание потомков\n";
-            if(children.empty()){
+        bool create_children(){
+            // std::cout<<"Создание потомков\n";
+            if(children.empty() && size > 100){
                 for(int z = 0; z < 2; z++){
                     for(int y = 0; y < 2; y++){
                         for(int x = 0; x < 2; x++){
@@ -243,12 +249,15 @@ class DynamicOctree{
                                                                 .center_mass = {cx, cy, cz},
                                                                 .center = {cx, cy, cz},
                                                                 .size = size / 2,
+                                                                .lvl = lvl + 1,
                                                                 .children = {}
                                                                 }));
                         }
                     }
                 }
+            return true;
             }
+            return false;
         }
 
         bool delete_children(){
@@ -285,21 +294,21 @@ class DynamicOctree{
             children.clear();
         }
 
-        size_t find_id_child(size_t id, const auto& charges){
+        size_t find_id_child(const auto& coords){
             std::vector<size_t> temp = {0, 1, 2, 3, 4, 5, 6, 7};
-            if(charges[id].coords[2] > center[2]){
+            if(coords[2] > center[2]){
                 temp.erase(temp.begin(), temp.begin() + 4);
             } else {
                 temp.erase(temp.begin() + 4, temp.end());
             }
 
-            if(charges[id].coords[1] > center[1]){
+            if(coords[1] > center[1]){
                 temp.erase(temp.begin(), temp.begin() + 2);
             } else {
                 temp.erase(temp.begin() + 2, temp.end());
             }
 
-            if(charges[id].coords[0] > center[0]){
+            if(coords[0] > center[0]){
                 return temp[1];
             } else {
                 return temp[0];
@@ -380,6 +389,7 @@ class DynamicOctree{
                             .center_mass = {(end[0] + start[0]) / 2, (end[1] + start[1]) / 2, (end[2] + start[2]) / 2},
                             .center = {(end[0] + start[0]) / 2, (end[1] + start[1]) / 2, (end[2] + start[2]) / 2},
                             .size = std::max(std::max(end[0] - start[0], end[1] - start[1]), std::max(end[1] - start[1], end[2] - start[2])),
+                            .lvl = 0,
                             .children = {}
                             };
     }

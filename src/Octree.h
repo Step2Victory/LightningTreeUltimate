@@ -112,7 +112,7 @@ class Octree{
 
         void create_children(){
             //std::cout<<"Создание потомков\n";
-            if(children.empty()){
+            if(children.empty() && size > 100){
                 for(int z = 0; z < 2; z++){
                     for(int y = 0; y < 2; y++){
                         for(int x = 0; x < 2; x++){
