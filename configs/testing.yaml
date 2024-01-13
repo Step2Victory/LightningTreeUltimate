@@ -14,7 +14,7 @@ alpha: 5e-8
 beta: 10
 sigma: 1e-5
 seed: 42
-max_number_edges: 5
+max_number_edges: 3
 
 start_x: -2000
 start_y: -2000
@@ -23,24 +23,24 @@ end_x: 2000
 end_y: 2000
 end_z: 12000
 external_field_layers: 
-  - p_0 : -0.47e-09
+  - p_0 : -0.77e-09
     h: 400
     L: 4000
     r: [0, 0, 11000]
-    a: 1
-  - p_0: 0.43e-09
+    a: 4
+  - p_0: 0.73e-09
     h: 600
     L: 4000
     r: [0, 0, 9800]
-    a: 1
-  - p_0 : -1.09e-09
+    a: 4
+  - p_0 : -2.19e-09
     h: 550
     L: 3000
     r: [0, 0, 6500]
-    a: 1
-  - p_0 : 0.56e-09
+    a: 4
+  - p_0 : 0.86e-09
     h: 700
     L: 1800
     r: [0, 0, 4700]
-    a: 1
-degree_probability_growth: 1
+    a: 4
+degree_probability_growth: 2.5

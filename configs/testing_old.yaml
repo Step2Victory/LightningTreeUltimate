@@ -2,7 +2,7 @@ h: 100
 delta_t: 1.0625e-07
 r: 0.01
 R: 50
-periphery_size: 1
+periphery_size: 2
 q_plus_max: 1.66898e-09
 q_minus_max: -3.33795e-09
 Q_plus_s: 0.000417244
@@ -27,7 +27,7 @@ external_field_layers:
     h: 100
     L: 200
     r: [0, 0, 8000]
-    a: 1.1
+    a: 1
   - p_0: 0.0000005
     h: 100
     L: 200
