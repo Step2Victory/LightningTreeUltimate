@@ -49,7 +49,7 @@ std::array<std::pair<double, std::array<int, 3>>, 26> sortDir(const std::array<s
                 [](const std::pair<double, std::array<int, 3>> &x,
                     const std::pair<double, std::array<int, 3>> &y) 
                     {
-                        return std::abs(y.first) < std::abs(x.first) || (std::abs(y.first) < std::abs(x.first) && y.second[0] < x.second[0]);
+                        return (std::abs(y.first) < std::abs(x.first));// || (std::abs(y.first) == std::abs(x.first) && y.second[0] < x.second[0]));
                     });
     return result_sort;
 }

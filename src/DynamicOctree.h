@@ -38,27 +38,30 @@ class DynamicOctree{
                 sum_Q = charges[id].Q;
                 center_mass = {charges[id].coords[0], charges[id].coords[1], charges[id].coords[2]};
             } else {
-                if(children.empty() && create_children()){
-                    // std::cout<<"Добавление в новую ноду\n";
-                    size_t id_child = find_id_child(charges[id].coords);
-                    // std::cout<<"id потомка: "<<id_child<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
-                    (*children[id_child]).add_charge(id, charges);
-                    // std::cout<<"добавление заряда в ноду: "<<children[id_child]<<" с id заряда: "<<children[id_child]->id_charge<<", переданный id "<<id<<'\n';
-                    id_child = find_id_child(charges[id_charge].coords);
-                    // std::cout<<"id потомка: "<<id_child<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
-                    (*children[id_child]).add_charge(id_charge, charges);
-                    // std::cout<<"добавление заряда в ноду: "<<children[id_child]<<" с id заряда: "<<children[id_child]->id_charge<<", переданный id "<<id_charge<<'\n';
-                    id_charge = 0;
-                    sum_q += charges[id].q;
-                    sum_Q += charges[id].Q;
-                    // std::cout<<"расчёт центра масс после создания потомков\n";
-                    calc_center_mass();
-                    // std::cout<<"расчёт центра масс завершился\n";
+                if(children.empty()){
+                    if(create_children()){
+                        // std::cout<<"Добавление в новую ноду\n";
+                        size_t id_child = find_id_child(charges[id].coords);
+                        // std::cout<<"id потомка: "<<id_child<<", id заряда "<<id_charge<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
+                        children[id_child]->add_charge(id, charges);
+                        // std::cout<<"добавление заряда в ноду: "<<children[id_child]<<" с id заряда: "<<children[id_child]->id_charge<<", переданный id "<<id<<'\n';
+                        id_child = find_id_child(charges[id_charge].coords);
+                        // std::cout<<"id потомка: "<<id_child<<", id заряда "<<id_charge<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
+                        children[id_child]->add_charge(id_charge, charges);
+                        // std::cout<<"добавление заряда в ноду: "<<children[id_child]<<" с id заряда: "<<children[id_child]->id_charge<<", переданный id "<<id_charge<<'\n';
+                        id_charge = 0;
+                        sum_q += charges[id].q;
+                        sum_Q += charges[id].Q;
+                        // std::cout<<"расчёт центра масс после создания потомков\n";
+                        calc_center_mass();
+                        // std::cout<<"расчёт центра масс завершился\n";
+                    } else 
+                        std::cout<<"Заряд не добавлен. Достигнут лимит разбиения узлов. id имеющегося заряда в узле "<<id_charge<<" координаты заряда {"<<center_mass[0]<<", "<<center_mass[1]<<", "<<center_mass[2]<<"}\n";
                 } else {
                     // std::cout<<"Поиск свободной ноды и добавление заряда\n";
                     size_t id_child = find_id_child(charges[id].coords);
-                    // std::cout<<"id потомка: "<<id_child<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
-                    (*children[id_child]).add_charge(id, charges);
+                    // std::cout<<"id потомка: "<<id_child<<", id заряда "<<id_charge<<" с координатами центра {"<<(*children[id_child]).center[0]<<", "<<(*children[id_child]).center[1]<<", "<<(*children[id_child]).center[2]<<"} и размером ноды: "<<(*children[id_child]).size<<'\n';
+                    children[id_child]->add_charge(id, charges);
                     sum_q += charges[id].q;
                     sum_Q += charges[id].Q;
                     // std::cout<<"расчёт центра масс после добавления заряда\n";
@@ -111,11 +114,16 @@ class DynamicOctree{
                         // print('d');
                         clear();
                     }
-                    else std::cout<<"Ошибка поиска! Не совпадение id вершин\n";
+                    else {
+                        std::cout<<"Ошибка поиска! Не совпадение id вершин\n";
+                        // std::cout<<"заряд в узле, уровеня "<<lvl<<". id: "<<id_charge<<" заряд = "<<sum_q<<", координаты центра: {"<<center[0]<<", "<<center[1]<<", "<<center[2]<<"} "<<children.size()<<'\n';
+                        // std::cout<<"удаляемый заряд. id: "<<id<<", координаты вершины: {"<<charges[id].coords[0]<<", "<<charges[id].coords[1]<<", "<<charges[id].coords[2]<<"}\n";
+                        }
                 }
             } else {
                 size_t id_child = find_id_child(charges[id].coords);
-                (*children[id_child]).delete_charge(id, charges);
+                // std::cout<<"id потомка: "<<id_child<<", координаты центра {"<<children[id_child]->center[0]<<", "<<children[id_child]->center[1]<<", "<<children[id_child]->center[2]<<"}\n";
+                children[id_child]->delete_charge(id, charges);
                 if(!delete_children()){
                     sum_q -= charges[id].q;
                     sum_Q -= charges[id].Q;
@@ -154,7 +162,7 @@ class DynamicOctree{
                     child->recalc_sumCharge(charges);
                     q += child->sum_q;
                     Q += child->sum_Q;
-                    moment[0] += (child->sum_q + child->.sum_Q) * child->center_mass[0];
+                    moment[0] += (child->sum_q + child->sum_Q) * child->center_mass[0];
                     moment[1] += (child->sum_q + child->sum_Q) * child->center_mass[1];
                     moment[2] += (child->sum_q + child->sum_Q) * child->center_mass[2];
                 }
@@ -265,7 +273,7 @@ class DynamicOctree{
             int count = 0;
             size_t id;
             for(size_t i = 0; i < children.size(); i++){
-                if(!children[i]->node_empty) {
+                if(!(children[i]->node_empty)) {
                     count++;
                     id = i;
                 }
@@ -296,22 +304,22 @@ class DynamicOctree{
 
         size_t find_id_child(const auto& coords){
             std::vector<size_t> temp = {0, 1, 2, 3, 4, 5, 6, 7};
-            if(coords[2] > center[2]){
-                temp.erase(temp.begin(), temp.begin() + 4);
-            } else {
+            if(coords[2] <= center[2]){
                 temp.erase(temp.begin() + 4, temp.end());
+            } else {
+                temp.erase(temp.begin(), temp.begin() + 4);
             }
 
-            if(coords[1] > center[1]){
-                temp.erase(temp.begin(), temp.begin() + 2);
-            } else {
+            if(coords[1] <= center[1]){
                 temp.erase(temp.begin() + 2, temp.end());
+            } else {
+                temp.erase(temp.begin(), temp.begin() + 2);
             }
 
-            if(coords[0] > center[0]){
-                return temp[1];
-            } else {
+            if(coords[0] <= center[0]){
                 return temp[0];
+            } else {
+                return temp[1];
             }
         }
         

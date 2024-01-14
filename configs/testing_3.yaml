@@ -16,29 +16,29 @@ sigma: 1e-5
 seed: 42
 max_number_edges: 3
 
-start_x: -500
-start_y: -500
+start_x: -2000
+start_y: -2000
 start_z: 4000
-end_x: 500
-end_y: 500
+end_x: 2000
+end_y: 2000
 end_z: 12000
 external_field_layers: 
-  - p_0 : -0.77
+  - p_0 : -0.77e-09
     h: 400
     L: 4000
     r: [0, 0, 11000]
     a: 4
-  - p_0: 0.73
+  - p_0: 0.73e-09
     h: 600
     L: 4000
     r: [0, 0, 9800]
     a: 4
-  - p_0 : -1.82
+  - p_0 : -1.82e-09
     h: 550
     L: 3000
     r: [0, 0, 6500]
     a: 4
-  - p_0 : 1.32
+  - p_0 : 1.32e-09
     h: 700
     L: 1800
     r: [0, 0, 4700]

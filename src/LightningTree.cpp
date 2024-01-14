@@ -67,30 +67,30 @@ LightningTree::LightningTree(const std::filesystem::path& path_to_config_file) {
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
     max_number_edges = config["max_number_edges"].as<int>();
-    // dynoctree = DynamicOctree(start_r, end_r);
+    dynoctree = DynamicOctree(start_r, end_r);
     auto first =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
                          .Phi = 0,
-                         .coords = {(end_r[0] + start_r[0]) / 2 + h/2, (end_r[1] + start_r[1]) / 2,
-                                    (end_r[2] + start_r[2]) / 2 + h/2},
+                         .coords = {(end_r[0] + start_r[0]) / 2 + h/2, (end_r[1] + start_r[1]) / 2 + h/2,
+                                    (end_r[2] + start_r[2]) / 2 - h/2 + 1000},
                          .internal_coords = {0, 0, 0},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    // dynoctree.add_charge(first, vertices);
+    dynoctree.add_charge(first, vertices);
     auto second =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
                          .Phi = 0,
-                         .coords = {(end_r[0] + start_r[0]) / 2 - h/2, (end_r[1] + start_r[1]) / 2,
-                                    (end_r[2] + start_r[2]) / 2 - h/2},
+                         .coords = {(end_r[0] + start_r[0]) / 2 - h/2, (end_r[1] + start_r[1]) / 2 - h/2,
+                                    (end_r[2] + start_r[2]) / 2 + h/2 + 1000},
                          .internal_coords = {0, 0, 1},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    // dynoctree.add_charge(second, vertices);
+    dynoctree.add_charge(second, vertices);
     addEdge(first, second);
 
-    // // dynoctree.print('d');
+    // dynoctree.print('d');
 }
 
 LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, size_t periphery_size_,
@@ -131,7 +131,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
     gen = std::mt19937(seed_);
     dis = std::uniform_real_distribution<>(0, 1);
     iter_number = 0;
-    // dynoctree = DynamicOctree(start_r, end_r);
+    dynoctree = DynamicOctree(start_r, end_r);
     auto first =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
@@ -141,7 +141,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
                          .internal_coords = {0, 0, 0},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    // dynoctree.add_charge(first, vertices);
+    dynoctree.add_charge(first, vertices);
     auto second =
         addVertex(Vertex{.q = 0,
                          .Q = 0,
@@ -151,7 +151,7 @@ LightningTree::LightningTree(double h_, double delta_t_, double r_, double R_, s
                          .internal_coords = {0, 0, 1},
                          .number_edges = 0,
                          .growless_iter_number = 0});
-    // dynoctree.add_charge(second, vertices);
+    dynoctree.add_charge(second, vertices);
     addEdge(first, second);
 }
 
@@ -171,33 +171,33 @@ void LightningTree::NextIter() {
 
 double LightningTree::Potential(const std::array<double, 3>& coords) {
     double Phi = 0;
-    for (auto& vertex : vertices) {
+    // for (auto& vertex : vertices) {
 
-        double l = countDistance(vertex.coords, coords);
-        double mirror_l = countDistance(vertex.coords, {coords[0], coords[1], -coords[2]});
-        double k = 1 / (4 * std::numbers::pi * epsilon_0);
-        if (l < kEps) {
-            if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
-                LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
-            }
-            Phi += vertex.q * k * (1 / (h / 2 + r) - 1 / (mirror_l + r)) +
-                   vertex.Q * k * (1 / (h / 2 + R) - 1 / (mirror_l + R));
-        } else {
-            if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
-                LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
-            }
-            Phi += vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
-                   vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
-        }
-    }
-    // Phi = dynoctree.potencial_in_point(coords, r, R, h);
+    //     double l = countDistance(vertex.coords, coords);
+    //     double mirror_l = countDistance(vertex.coords, {coords[0], coords[1], -coords[2]});
+    //     double k = 1 / (4 * std::numbers::pi * epsilon_0);
+    //     if (l < kEps) {
+    //         if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
+    //             LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
+    //         }
+    //         Phi += vertex.q * k * (1 / (h / 2 + r) - 1 / (mirror_l + r)) +
+    //                vertex.Q * k * (1 / (h / 2 + R) - 1 / (mirror_l + R));
+    //     } else {
+    //         if (!checkDouble(vertex.q) && checkDouble(vertex.Q)) {
+    //             LOG(INFO) << "Q = " << vertex.Q << ", q = " << vertex.q;
+    //         }
+    //         Phi += vertex.q * k * (1 / (l + r) - 1 / (mirror_l + r)) +
+    //                vertex.Q * k * (1 / (l + R) - 1 / (mirror_l + R));
+    //     }
+    // }
+    Phi = dynoctree.potencial_in_point(coords, r, R, h);
     // std::cout<<"Потенциал = "<<Phi<<"\n";
     return Phi;
 }
 
 void LightningTree::CountPotential() {
-    for (auto& point : vertices) {
-        point.Phi = Potential(point.coords) + external_field_potential(point.coords);
+    for (auto& vertex : vertices) {
+        vertex.Phi = Potential(vertex.coords) + external_field_potential(vertex.coords);
     }
 }
 
@@ -311,8 +311,8 @@ void LightningTree::Transport() {
     //         std::cout<<"Вершина "<<i<<" не активна\n";
     // }
     iter_number++;
-    // dynoctree.recalc_sumCharge(vertices); // Актуализация зарядов в октодереве
-    // // dynoctree.print('d');
+    dynoctree.recalc_sumCharge(vertices); // Актуализация зарядов в октодереве
+    // dynoctree.print('d');
 }
 
 void LightningTree::Grow() {
@@ -326,10 +326,12 @@ void LightningTree::Grow() {
         // auto directions = randomDirections();
         auto temp = GetPotencialDir(v_from_id);
         auto directions = sortDir(temp);
-        // for(size_t i = 0; i < temp.size(); i++){
-        //     std::cout<<directions[i].first<<", ";
-        // }
-        // std::cout<<std::endl;
+        // size_t t_id = 0;
+        for(auto& dir : directions){
+            std::cout<<dir.first<<", ";
+            // std::cout<<temp[t_id++].first<<'\n';
+        }
+        std::cout<<std::endl;
         for (const auto& dir : directions) {
             if (vertices[v_from_id].number_edges >= static_cast<size_t>(max_number_edges))
                 break;
@@ -347,35 +349,39 @@ void LightningTree::Grow() {
             auto internal_coords = countInternalCoords(v_from_id, dir.second);
             auto coords = countCoords(v_from_id, dir.second);
             std::optional<size_t> v_to_id;
+            for(size_t id = 0; id < vertices.size(); id++){
+                if(vertices[id].coords == coords)
+                    v_to_id = id;                    
+            }
             Vertex vertex;
 
-            if (internal_coords_to_id.contains(internal_coords)) {
-                v_to_id = internal_coords_to_id[internal_coords];
+            if (v_to_id.has_value() && vertices_activity[*v_to_id]) {
+                continue;
+            }
+
+            if (v_to_id.has_value()){//internal_coords_to_id.contains(internal_coords)) {
+                // v_to_id = internal_coords_to_id[internal_coords];
                 vertex = vertices[*v_to_id];
             } else {
                 vertex = Vertex{.q = 0,
                                 .Q = 0,
-                                .Phi = dir.first,
-                                // .Phi = Potential(coords),
+                                .Phi = Potential(coords),
                                 .coords = coords,
                                 .internal_coords = internal_coords,
                                 .number_edges = 0,
                                 .growless_iter_number = 0};
             }
-            if (v_to_id.has_value() && vertices_activity[*v_to_id]) {
-                continue;
-            }
+
             bool criterion_value = GrowthCriterion(vertices[v_from_id], vertex);
             if (criterion_value) {
                 vertices[v_from_id].number_edges++;
                 if (!v_to_id.has_value()) {
                     v_to_id = addVertex(vertex);
+                    dynoctree.add_charge(*v_to_id, vertices);
                 } else {
                     vertices[*v_to_id].number_edges++;
                     vertices_activity[*v_to_id] = true;
                 }
-
-                // dynoctree.add_charge(*v_to_id, vertices);
 
                 if (e_id == -1) {
                     addEdge(v_from_id, *v_to_id);
@@ -561,8 +567,9 @@ std::array<std::pair<double, std::array<int, 3>>, 26> LightningTree::GetPotencia
                 }
                 std::array<double, 3> new_point = countCoords(vid, {i, j, k});
                 double l = countDistance(vertices[vid].coords, new_point);
-                double E = (-(vertices[vid].Phi - Potential(new_point)) / l);
-                // std::cout<<Phi<<", ";
+                double phi = Potential(new_point) + external_field_potential(new_point);
+                double E = (-(vertices[vid].Phi - phi) / l);
+                // std::cout<<vertices[vid].Phi<<",    "<<phi<<'\n';
                 potencial_dir[i*9 + j*3 + k] = std::pair<double, std::array<int, 3>>(E, {i, j, k});
             }
         }
