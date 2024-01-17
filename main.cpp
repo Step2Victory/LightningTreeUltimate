@@ -4,7 +4,6 @@
 #include <iostream>
 #include <chrono>
 
-
 int ReadResponse()
 {
     int response;
@@ -13,7 +12,9 @@ int ReadResponse()
 }
 
 int main(int argc, char* argv[]) {
+
     // Initialize Google’s logging library.
+    
     if (argc) {
         google::InitGoogleLogging(argv[0]);
     }
@@ -24,7 +25,9 @@ int main(int argc, char* argv[]) {
     YAML::Node config = YAML::LoadFile(project_path / "configs" / "main.yaml");
     auto path_data = project_path / config["path_to_data_for_python"].as<std::string>();
     auto start = std::chrono::system_clock::now();
+    // std::cout<<"Запуск создания обекта LT\n";
     auto lt = LightningTree(project_path / "configs" / config["lt_config"].as<std::string>());
+    // std::cout<<"Завершение создание объекта LT\n";
     auto end = std::chrono::system_clock::now();
     lt.AllParams();
     lt.Info();
@@ -35,6 +38,7 @@ int main(int argc, char* argv[]) {
     lt.WriteResponse(1);
     auto response = ReadResponse();
 
+    // std::cout<<"Запуск построения молнии\n";
     for (int i = 0; i < n_iter; ++i)
     {
         if(response == 0) return 0;

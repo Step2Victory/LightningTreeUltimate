@@ -1,4 +1,4 @@
-lt_config: testing.yaml
-path_to_data_for_python: LightningTree_data 
-number_of_iterations: 1000000
-input_files_iter_period: 10000 
+lt_config: testing_old.yaml
+path_to_data_for_python: LightningTree_data
+number_of_iterations: 10000000
+input_files_iter_period: 10000
