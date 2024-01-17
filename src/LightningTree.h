@@ -29,7 +29,9 @@ public:
     double CountElectricity(const Vertex& from, const Vertex& to) const;
     void CountCurrent();
     std::array<double, 3> countCoords(size_t, const std::array<int, 3>&);
-    std::array<int, 3> countInternalCoords(size_t, const std::array<int, 3>&);
+    // std::array<int, 3> countInternalCoords(size_t, const std::array<int, 3>&);
+    std::array<int, 3> count_internal_coords(const std::array<double, 3>&);
+    size_t get_hash_id(const std::array<int, 3>&);
 
     // double countDistance(const std::array<double, 3>&, const std::array<double, 3>&) const;
     cubic_grid CreateNode(size_t, const std::array<int, 3>&);
@@ -65,7 +67,7 @@ private:
         std::array<double, 3> coords; // координаты вершины
         std::array<int, 3> internal_coords; // относительные координаты вершины
         size_t number_edges; // количетсво рёбер
-        size_t growless_iter_number; // Количество пропущенных итераций роста
+        int growless_iter_number; // Количество пропущенных итераций роста
     };
 
     struct Edge {
@@ -107,19 +109,20 @@ private:
 
     std::vector<cubic_grid> graph; // граф дерева
 
-    struct Less {
-        bool operator()(const std::array<int, 3>& lhs, const std::array<int, 3>& rhs) const {
-            if (lhs[0] == rhs[0] && lhs[1] == rhs[1]) {
-                return lhs[2] < rhs[2];
-            }
-            if (lhs[0] == rhs[0]) {
-                return lhs[1] < rhs[1];
-            }
-            return lhs[0] < rhs[0];
-        }
-    };
+    // struct Less {
+    //     bool operator()(const std::array<int, 3>& lhs, const std::array<int, 3>& rhs) const {
+    //         if (lhs[0] == rhs[0] && lhs[1] == rhs[1]) {
+    //             return lhs[2] < rhs[2];
+    //         }
+    //         if (lhs[0] == rhs[0]) {
+    //             return lhs[1] < rhs[1];
+    //         }
+    //         return lhs[0] < rhs[0];
+    //     }
+    // };
 
-    std::map<std::array<int, 3>, int, Less> internal_coords_to_id; // массив координат
+    // std::map<std::array<int, 3>, int, Less> internal_coords_to_id; // массив координат
+    std::map<size_t, size_t> hash_to_id;
     size_t iter_number; // количество итераций
 
     int seed;

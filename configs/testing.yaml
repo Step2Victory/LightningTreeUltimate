@@ -2,7 +2,7 @@ h: 100
 delta_t: 1.0625e-07
 r: 0.01
 R: 50
-periphery_size: 5
+periphery_size: 1
 q_plus_max: 1.66898e-09
 q_minus_max: -3.33795e-09
 Q_plus_s: 0.000417244
@@ -16,11 +16,11 @@ sigma: 1e-5
 seed: 42
 max_number_edges: 3
 
-start_x: -500
-start_y: -500
+start_x: -2000
+start_y: -2000
 start_z: 4000
-end_x: 500
-end_y: 500
+end_x: 2000
+end_y: 2000
 end_z: 12000
 external_field_layers: 
   - p_0 : -0.77e-09
@@ -38,9 +38,9 @@ external_field_layers:
     L: 3000
     r: [0, 0, 6500]
     a: 4
-  - p_0 : 0.97e-09
+  - p_0 : 0.86e-09
     h: 700
     L: 1800
     r: [0, 0, 4700]
     a: 4
-degree_probability_growth: 2.5
+degree_probability_growth: 1
